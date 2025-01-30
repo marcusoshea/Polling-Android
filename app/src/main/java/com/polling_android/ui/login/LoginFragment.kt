@@ -21,6 +21,7 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
     private lateinit var spinner: Spinner
+    private lateinit var loginHandler: LoginHandler
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,8 +31,16 @@ class LoginFragment : Fragment() {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        loginHandler = LoginHandler(requireContext())
+
         spinner = binding.pollingOrdersSpinner
         fetchPollingOrders()
+
+        binding.loginButton.setOnClickListener {
+            val email = binding.email.text.toString()
+            val password = binding.password.text.toString()
+            loginHandler.handleLogin(email, password)
+        }
 
         return root
     }
@@ -47,7 +56,7 @@ class LoginFragment : Fragment() {
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     spinner.adapter = adapter
 
-                    Log.d("LoginFragment", "Fetched ${pollingOrders} orders")
+                    Log.d("LoginFragment", "Fetched $pollingOrders orders")
                     Toast.makeText(context, "Fetched ${pollingOrders?.size} orders", Toast.LENGTH_SHORT).show()
                 }
             }

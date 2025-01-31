@@ -22,6 +22,7 @@ class LoginFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var spinner: Spinner
     private lateinit var loginHandler: LoginHandler
+    private var pollingOrders: List<PollingOrder> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,11 +36,12 @@ class LoginFragment : Fragment() {
 
         spinner = binding.pollingOrdersSpinner
         fetchPollingOrders()
-
         binding.loginButton.setOnClickListener {
             val email = binding.email.text.toString()
             val password = binding.password.text.toString()
-            loginHandler.handleLogin(email, password)
+            val selectedPollingOrder = spinner.selectedItem as PollingOrder
+            val pollingOrderId = selectedPollingOrder.polling_order_id
+            loginHandler.handleLogin(email, password, pollingOrderId)
         }
 
         return root
@@ -49,15 +51,10 @@ class LoginFragment : Fragment() {
         RetrofitInstance.api.getPollingOrders().enqueue(object : Callback<List<PollingOrder>> {
             override fun onResponse(call: Call<List<PollingOrder>>, response: Response<List<PollingOrder>>) {
                 if (response.isSuccessful) {
-                    val pollingOrders = response.body()
-                    val pollingOrderNames = pollingOrders?.map { it.polling_order_name } ?: emptyList()
-
-                    val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, pollingOrderNames.sorted())
+                    pollingOrders = response.body() ?: emptyList()
+                    val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, pollingOrders)
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     spinner.adapter = adapter
-
-                    Log.d("LoginFragment", "Fetched $pollingOrders orders")
-                    Toast.makeText(context, "Fetched ${pollingOrders?.size} orders", Toast.LENGTH_SHORT).show()
                 }
             }
 

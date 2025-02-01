@@ -6,15 +6,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.polling_android.databinding.FragmentLoginBinding
 import com.polling_android.api.RetrofitInstance
 import com.polling_android.model.PollingOrder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import com.polling_android.R
 
 class LoginFragment : Fragment() {
 
@@ -41,7 +42,15 @@ class LoginFragment : Fragment() {
             val password = binding.password.text.toString()
             val selectedPollingOrder = spinner.selectedItem as PollingOrder
             val pollingOrderId = selectedPollingOrder.polling_order_id
-            loginHandler.handleLogin(email, password, pollingOrderId)
+            toggleLoading(true)
+            loginHandler.handleLogin(email, password, pollingOrderId) { logSuccess ->
+                if (logSuccess) {
+                    findNavController().navigate(R.id.action_loginFragment_to_homeFragment)
+                }
+                else {
+                    toggleLoading(false)
+                }
+            }
         }
 
         return root
@@ -62,6 +71,11 @@ class LoginFragment : Fragment() {
                 Toast.makeText(context, "Failed to fetch polling orders", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun toggleLoading(isLoading: Boolean) {
+        binding.loginButton.visibility = if (isLoading) View.GONE else View.VISIBLE
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {

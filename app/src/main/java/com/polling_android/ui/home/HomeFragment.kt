@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.polling_android.databinding.FragmentHomeBinding
 import com.polling_android.R
+import com.polling_android.util.UserUtils.isUserLoggedIn
 
 class HomeFragment : Fragment() {
 
@@ -21,7 +22,7 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        if (!isUserLoggedIn()) {
+        if (!isUserLoggedIn(requireContext())) {
             findNavController().navigate(R.id.nav_login)
             return View(context)
         }
@@ -36,11 +37,6 @@ class HomeFragment : Fragment() {
             textView.text = it
         }
         return root
-    }
-
-    private fun isUserLoggedIn(): Boolean {
-        // Replace this with your actual logic to check if the user is logged in
-        return false
     }
 
     override fun onDestroyView() {

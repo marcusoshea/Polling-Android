@@ -1,9 +1,9 @@
 Replicating website ( https://www.AEPolling.org - https://github.com/marcusoshea/Polling ) to native android app. 
 
-WIP - Currently only has a login page, that pulls the specific orders located within the API.
+Completed:
+* Login Authentication
 
 TODO:
-* Login Authentication
 * Registration
 * Profile
 * Pollings

@@ -9,4 +9,8 @@
             android:icon="@drawable/ic_menu_camera"
             android:title="@string/menu_home" />
     </group>
+    <item
+        android:id="@+id/nav_signout"
+        android:icon="@drawable/ic_menu_camera"
+        android:title="@string/menu_signout" />
 </menu>

@@ -2,6 +2,8 @@ package com.polling_android
 
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
+import androidx.core.view.GravityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
@@ -13,7 +15,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.polling_android.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -35,16 +37,14 @@ class MainActivity : AppCompatActivity() {
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         navController.navigate(R.id.nav_login)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_login
+                R.id.nav_home, R.id.nav_login, R.id.nav_signout
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-
+        navView.setNavigationItemSelectedListener(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -58,5 +58,20 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.nav_signout -> {
+                findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_home_to_nav_signout)
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_home -> {
+                findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.nav_home)
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+        }
+        return false
+    }
 
 }

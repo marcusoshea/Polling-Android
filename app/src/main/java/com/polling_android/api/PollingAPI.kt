@@ -7,13 +7,14 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Body
 import retrofit2.http.POST
+import okhttp3.ResponseBody
 
 interface PollingApi {
     @GET("pollingorder")
     fun getPollingOrders(): Call<List<PollingOrder>>
 
     @POST("/member/login")
-    fun login(@Body loginRequest: LoginRequest): Call<Void>
+    fun login(@Body loginRequest: LoginRequest): Call<ResponseBody>
 
 
 

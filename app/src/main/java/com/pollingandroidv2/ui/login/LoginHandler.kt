@@ -24,6 +24,7 @@ class LoginHandler(private val context: Context) {
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("secure_prefs", Context.MODE_PRIVATE)
     private val keyStore: KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    //TODO: Prior to releasing to production replace the keyAlias with your own key alias!!
     private val keyAlias = "MyKeyAlias"
 
     init {

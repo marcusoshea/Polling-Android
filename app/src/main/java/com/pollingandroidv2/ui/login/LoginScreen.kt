@@ -1,6 +1,5 @@
-package com.polling_android.ui.login
+package com.pollingandroidv2.ui.login
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,9 +26,6 @@ fun LoginScreen(navController: NavController, loginHandler: LoginHandler, modifi
     LaunchedEffect(Unit) {
         fetchPollingOrders { orders ->
             pollingOrders = orders
-            if (orders.isNotEmpty()) {
-                selectedPollingOrder = orders[0]
-            }
         }
     }
 

@@ -1,6 +1,5 @@
-package com.polling_android.ui.home
+package com.pollingandroidv2.ui.home
 
-import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.polling_android.util.UserUtils.isUserLoggedIn
+import com.pollingandroidv2.ui.home.HomeViewModel
 
 @Composable
 fun HomeScreen(navController: NavController = rememberNavController(), homeViewModel: HomeViewModel = viewModel()) {

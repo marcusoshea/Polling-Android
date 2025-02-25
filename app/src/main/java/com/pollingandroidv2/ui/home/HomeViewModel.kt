@@ -1,4 +1,4 @@
-package com.polling_android.ui.home
+package com.pollingandroidv2.ui.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

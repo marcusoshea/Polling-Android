@@ -1,4 +1,4 @@
-package com.polling_android.ui.login
+package com.pollingandroidv2.ui.login
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -59,7 +59,7 @@ class LoginHandler(private val context: Context) {
     }
 
     fun handleLogin(email: String, password: String, pollingOrder: Int, callback: (logSuccess: Boolean) -> Unit) {
-        if (email.isNotEmpty() && password.isNotEmpty()) {
+        if (email.isNotEmpty() && password.isNotEmpty() && pollingOrder != 0) {
             val loginRequest = LoginRequest(email, password, pollingOrder)
             RetrofitInstance.api.login(loginRequest).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
@@ -90,7 +90,7 @@ class LoginHandler(private val context: Context) {
                 }
             })
         } else {
-            Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Please enter all authentication information", Toast.LENGTH_SHORT).show()
             callback(false)
         }
     }

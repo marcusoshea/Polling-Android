@@ -1,4 +1,4 @@
-package com.polling_android.ui.signout
+package com.pollingandroidv2.ui.signout
 
 import android.content.Context
 import android.os.Bundle

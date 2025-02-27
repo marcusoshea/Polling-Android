@@ -39,7 +39,7 @@ fun SignOutScreen() {
     ) {
         Button(onClick = {
             signOut(context)
-            navController.navigate("LoginScreen")
+            navController.navigate("login")
         }) {
             Text("Sign Out")
         }

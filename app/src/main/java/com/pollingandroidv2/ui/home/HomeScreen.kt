@@ -13,14 +13,24 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.polling_android.util.UserUtils.isUserLoggedIn
 import com.pollingandroidv2.ui.home.HomeViewModel
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import com.pollingandroidv2.ui.components.TopAppBar
 
 @Composable
-fun HomeScreen(navController: NavController = rememberNavController(), homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    navController: NavController = rememberNavController(),
+    homeViewModel: HomeViewModel = viewModel(),
+    onMenuClick: () -> Unit
+) {
     val context = LocalContext.current
-
+    TopAppBar(
+        title = "Home",
+        onMenuClick = onMenuClick
+    )
     if (!isUserLoggedIn(context)) {
         LaunchedEffect(Unit) {
-            navController.navigate("LoginScreen")
+            navController.navigate("login")
         }
     } else {
         val text by homeViewModel.text.observeAsState("")

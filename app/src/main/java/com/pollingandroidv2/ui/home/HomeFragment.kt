@@ -11,7 +11,9 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PollingAndroidV2Theme {
-                HomeScreen()
+                HomeScreen(
+                    onMenuClick = { /* Empty lambda or add your callback implementation here */ }
+                )
             }
         }
     }

@@ -12,15 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Burnt,
+    secondary = Blue,
+    tertiary = Gold,
+    background = Blue,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = Burnt,
+    secondary = Blue,
+    tertiary = Gold,
+    background = Blue
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -32,6 +34,13 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF1C1B1F),
     */
 )
+
+val PrimaryColor = Blue
+val SecondaryColor = Burnt
+val TertiaryColor = Gold
+val TextColor = Black
+
+
 
 @Composable
 fun PollingAndroidV2Theme(

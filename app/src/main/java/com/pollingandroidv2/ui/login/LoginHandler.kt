@@ -95,4 +95,9 @@ class LoginHandler(private val context: Context) {
             callback(false)
         }
     }
+
+    fun signOut() {
+        sharedPreferences.edit().clear().apply()
+        Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+    }
 }

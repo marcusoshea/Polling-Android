@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.window.PopupProperties
+import com.polling_android.util.UserUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +103,9 @@ fun LoginScreen(
                             onClick = {
                                 loginViewModel.setSelectedPollingOrder(order)
                                 expanded = false
+                                val encryptedOrderName = UserUtils.encryptData(order.toString())
+                                SecureStorage.store("PollingOrderName", encryptedOrderName)
+
                             }
                         )
                     }

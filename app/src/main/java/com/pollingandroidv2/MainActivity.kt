@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.pollingandroidv2.ui.home.HomeScreen
 import com.pollingandroidv2.ui.login.LoginHandler
 import com.pollingandroidv2.ui.login.LoginScreen
+import com.pollingandroidv2.ui.profile.ProfileScreen
 import com.pollingandroidv2.ui.theme.PollingAndroidV2Theme
 import com.pollingandroidv2.ui.theme.PrimaryColor
 import com.pollingandroidv2.ui.theme.TertiaryColor
@@ -29,6 +30,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import com.pollingandroidv2.ui.candidates.CandidatesScreen
+import com.pollingandroidv2.ui.polling.PollingScreen
+import com.pollingandroidv2.ui.report.ReportScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,31 +58,65 @@ class MainActivity : ComponentActivity() {
                                         .background(color = SecondaryColor)
                                         .padding(20.dp)
                                 ) {
-                                    Text(text = "Home")
+                                    Text(
+                                        text = "Home",
+                                        modifier = Modifier.clickable {
+                                            navController.navigate("home")
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
+                                    )
+                                    Text(
+                                        text = "Profile",
+                                        modifier = Modifier.clickable {
+                                            navController.navigate("profile")
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
+                                    )
+                                    Text(
+                                        text = "Polling",
+                                        modifier = Modifier.clickable {
+                                            navController.navigate("polling")
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
                                         modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
                                     )
-                                    Text(text = "Profile")
+                                    Text(
+                                        text = "Candidates",
+                                        modifier = Modifier.clickable {
+                                            navController.navigate("candidates")
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
                                         modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
                                     )
-                                    Text(text = "Pollings")
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    Text(
+                                        text = "Report",
+                                        modifier = Modifier.clickable {
+                                            navController.navigate("report")
+                                            scope.launch { drawerState.close() }
+                                        }
                                     )
-                                    Text(text = "Candidates")
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
-                                    )
-                                    Text(text = "Report")
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
@@ -118,6 +156,30 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("home") {
                                 HomeScreen(
+                                    navController = navController,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("profile") {
+                                ProfileScreen(
+                                    navController = navController,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("polling") {
+                                PollingScreen(
+                                    navController = navController,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("candidates") {
+                                CandidatesScreen(
+                                    navController = navController,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("report") {
+                                ReportScreen(
                                     navController = navController,
                                     onMenuClick = { scope.launch { drawerState.open() } }
                                 )

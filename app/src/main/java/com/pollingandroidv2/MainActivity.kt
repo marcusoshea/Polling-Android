@@ -18,11 +18,17 @@ import com.pollingandroidv2.ui.login.LoginScreen
 import com.pollingandroidv2.ui.theme.PollingAndroidV2Theme
 import com.pollingandroidv2.ui.theme.PrimaryColor
 import com.pollingandroidv2.ui.theme.TertiaryColor
+import com.pollingandroidv2.ui.theme.SecondaryColor
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,28 +45,66 @@ class MainActivity : ComponentActivity() {
                     ModalNavigationDrawer(
                         drawerState = drawerState,
                         drawerContent = {
-                            Column(modifier = modifier.background(color = PrimaryColor)) {
-                                Text(text = "Home")
-                                Text(text = "Profile")
-                                Text(text = "Pollings")
-                                Text(text = "Candidates")
-                                Text(text = "Report")
-                                val annotatedText = buildAnnotatedString {
-                                    pushStringAnnotation(tag = "SignOut", annotation = "signOut")
-                                    withStyle(style = SpanStyle(color = TertiaryColor)) {
-                                        append("Sign Out")
-                                    }
-                                    pop()
-                                }
-                                Text(
-                                    text = annotatedText,
-                                    modifier = Modifier.clickable {
-                                        loginHandler.signOut()
-                                        scope.launch { drawerState.close() }
-                                        navController.navigate("login") {
+                            Column(modifier = modifier
+                                .padding( top = 80.dp)
+                            ) {
+                                Column(
+                                    modifier = modifier
+                                        .clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
+                                        .background(color = SecondaryColor)
+                                        .padding(20.dp)
+                                ) {
+                                    Text(text = "Home")
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    )
+                                    Text(text = "Profile")
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    )
+                                    Text(text = "Pollings")
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    )
+                                    Text(text = "Candidates")
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    )
+                                    Text(text = "Report")
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                    )
+                                    val annotatedText = buildAnnotatedString {
+                                        pushStringAnnotation(
+                                            tag = "SignOut",
+                                            annotation = "signOut"
+                                        )
+                                        withStyle(style = SpanStyle(color = TertiaryColor)) {
+                                            append("Sign Out")
                                         }
+                                        pop()
                                     }
-                                )
+                                    Text(
+                                        text = annotatedText,
+                                        modifier = Modifier.clickable {
+                                            loginHandler.signOut()
+                                            scope.launch { drawerState.close() }
+                                            navController.navigate("login") {
+                                            }
+                                        }
+
+                                    )
+                                }
                             }
                         }
                     ) {

@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpOffset
@@ -23,8 +24,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.window.PopupProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,25 +33,26 @@ fun LoginScreen(
     navController: NavController,
     loginHandler: LoginHandler,
     onMenuClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loginViewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var pollingOrders by remember { mutableStateOf(emptyList<PollingOrder>()) }
-    var selectedPollingOrder by remember { mutableStateOf<PollingOrder?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    val email by loginViewModel.email.observeAsState("")
+    val password by loginViewModel.password.observeAsState("")
+    val pollingOrders by loginViewModel.pollingOrders.observeAsState(emptyList())
+    val selectedPollingOrder by loginViewModel.selectedPollingOrder.observeAsState(null)
+    val isLoading by loginViewModel.isLoading.observeAsState(false)
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         fetchPollingOrders { orders ->
-            pollingOrders = orders
+            loginViewModel.setPollingOrders(orders)
         }
     }
 
     Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
         TopAppBar(
-            title = { Text("Login") },
+            title = { Text("Welcome to ÆPolling") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = SecondaryColor
             )
@@ -60,14 +61,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { loginViewModel.setEmail(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { loginViewModel.setPassword(it) },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
@@ -99,7 +100,7 @@ fun LoginScreen(
                         DropdownMenuItem(
                             text = { Text(order.toString()) },
                             onClick = {
-                                selectedPollingOrder = order
+                                loginViewModel.setSelectedPollingOrder(order)
                                 expanded = false
                             }
                         )
@@ -109,13 +110,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(40.dp))
             Button(
                 onClick = {
-                    isLoading = true
+                    loginViewModel.setLoading(true)
                     loginHandler.handleLogin(
                         email,
                         password,
                         selectedPollingOrder?.polling_order_id ?: 0
                     ) { logSuccess ->
-                        isLoading = false
+                        loginViewModel.setLoading(false)
                         if (logSuccess) {
                             navController.navigate("home")
                         }
@@ -139,7 +140,7 @@ private fun fetchPollingOrders(callback: (List<PollingOrder>) -> Unit) {
     RetrofitInstance.api.getPollingOrders().enqueue(object : Callback<List<PollingOrder>> {
         override fun onResponse(call: Call<List<PollingOrder>>, response: Response<List<PollingOrder>>) {
             if (response.isSuccessful) {
-                val orders = response.body()?.sortedBy { it.polling_order_name}                //Log.d("LoginScreen", "Polling orders received: ${orders?.size}")
+                val orders = response.body()?.sortedBy { it.polling_order_name }
                 if (orders.isNullOrEmpty()) {
                     Log.w("LoginScreen", "Received empty or null polling orders")
                 }

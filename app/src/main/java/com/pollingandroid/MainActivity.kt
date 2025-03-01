@@ -16,6 +16,8 @@ import com.pollingandroid.ui.home.HomeScreen
 import com.pollingandroid.ui.login.LoginHandler
 import com.pollingandroid.ui.login.LoginScreen
 import com.pollingandroid.ui.profile.ProfileScreen
+import com.pollingandroid.ui.registration.RegistrationScreen
+import com.pollingandroid.ui.registration.RegistrationHandler
 import com.pollingandroid.ui.theme.PollingAndroidTheme
 import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
@@ -44,6 +46,7 @@ class MainActivity : ComponentActivity() {
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
                 val loginHandler = LoginHandler(this@MainActivity)
+                val registrationHandler = RegistrationHandler(this@MainActivity)
                 val modifier = Modifier
                 Surface(color = MaterialTheme.colorScheme.background) {
                     ModalNavigationDrawer(
@@ -181,6 +184,13 @@ class MainActivity : ComponentActivity() {
                             composable("report") {
                                 ReportScreen(
                                     navController = navController,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("register") {
+                                RegistrationScreen(
+                                    navController = navController,
+                                    registrationHandler = registrationHandler,
                                     onMenuClick = { scope.launch { drawerState.open() } }
                                 )
                             }

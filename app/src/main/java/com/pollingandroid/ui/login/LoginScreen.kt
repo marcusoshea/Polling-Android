@@ -56,7 +56,11 @@ fun LoginScreen(
                 containerColor = SecondaryColor
             )
         )
-        Column(modifier = modifier.padding(30.dp)) {
+        Column(
+            modifier = modifier
+                .weight(1f)  // Takes remaining space
+                .padding(horizontal = 30.dp, vertical = 16.dp)
+        ) {
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = email,
@@ -132,6 +136,27 @@ fun LoginScreen(
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
                     Text("Login")
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TextButton(
+                    onClick = { navController.navigate("register") },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) {
+                    Text("Register")
+                }
+                TextButton(
+                    onClick = { navController.navigate("forgot_password") },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
+                ) {
+                    Text("Forgot Password")
                 }
             }
         }

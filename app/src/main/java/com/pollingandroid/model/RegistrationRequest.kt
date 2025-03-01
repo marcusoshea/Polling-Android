@@ -6,5 +6,6 @@ data class RegistrationRequest(
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String,
     @SerializedName("password") val password: String,
-    @SerializedName("polling_order_id") val pollingOrderId: Int
+    @SerializedName("polling_order_id") val pollingOrderId: Int,
+    @SerializedName("pom_created_at") val pomCreatedAt: String
 )

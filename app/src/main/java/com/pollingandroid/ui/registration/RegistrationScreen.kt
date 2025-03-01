@@ -28,7 +28,7 @@ import com.pollingandroid.util.UserUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun RegistrationScreen(
     navController: NavController,
     registrationHandler: RegistrationHandler,
     onMenuClick: () -> Unit,
@@ -52,7 +52,7 @@ fun LoginScreen(
 
     Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
         TopAppBar(
-            title = { Text("Welcome to ÆPolling") },
+            title = { Text("Registration") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = SecondaryColor
             )
@@ -129,7 +129,7 @@ fun LoginScreen(
                     ) { logSuccess ->
                         registrationViewModel.setLoading(false)
                         if (logSuccess) {
-                            navController.navigate("home")
+                            navController.navigate("login")
                         }
                     }
                 },
@@ -140,7 +140,7 @@ fun LoginScreen(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Login")
+                    Text("Register")
                 }
             }
         }

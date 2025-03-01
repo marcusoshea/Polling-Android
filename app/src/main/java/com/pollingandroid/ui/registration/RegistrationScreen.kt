@@ -2,6 +2,7 @@ package com.pollingandroid.ui.registration
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,10 +22,16 @@ import retrofit2.Callback
 import retrofit2.Response
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import com.pollingandroid.util.UserUtils
+import com.pollingandroid.util.PollingOrderUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +52,7 @@ fun RegistrationScreen(
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        fetchPollingOrders { orders ->
+        PollingOrderUtils.fetchPollingOrders { orders ->
             registrationViewModel.setPollingOrders(orders)
         }
     }
@@ -58,6 +65,14 @@ fun RegistrationScreen(
             )
         )
         Column(modifier = modifier.padding(30.dp)) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back to Login",
+                tint = Color.White,
+                modifier = Modifier
+                    .background(color = SecondaryColor, shape = CircleShape)
+                    .padding(8.dp)
+                    .clickable { navController.navigate("login") })
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = name,
@@ -145,26 +160,4 @@ fun RegistrationScreen(
             }
         }
     }
-}
-
-private fun fetchPollingOrders(callback: (List<PollingOrder>) -> Unit) {
-    RetrofitInstance.api.getPollingOrders().enqueue(object : Callback<List<PollingOrder>> {
-        override fun onResponse(call: Call<List<PollingOrder>>, response: Response<List<PollingOrder>>) {
-            if (response.isSuccessful) {
-                val orders = response.body()?.sortedBy { it.polling_order_name }
-                if (orders.isNullOrEmpty()) {
-                    Log.w("RegistrationScreen", "Received empty or null polling orders")
-                }
-                callback(orders ?: emptyList())
-            } else {
-                Log.e("RegistrationScreen", "Error fetching polling orders: ${response.code()} - ${response.message()}")
-                callback(emptyList())
-            }
-        }
-
-        override fun onFailure(call: Call<List<PollingOrder>>, t: Throwable) {
-            Log.e("RegistrationScreen", "Failed to fetch polling orders", t)
-            callback(emptyList())
-        }
-    })
 }

@@ -32,9 +32,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import com.pollingandroid.model.ResetPasswordRequest
 import com.pollingandroid.ui.candidates.CandidatesScreen
 import com.pollingandroid.ui.polling.PollingScreen
 import com.pollingandroid.ui.report.ReportScreen
+import com.pollingandroid.ui.resetpassword.ResetPasswordHandler
+import com.pollingandroid.ui.resetpassword.ResetPasswordScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -191,6 +194,13 @@ class MainActivity : ComponentActivity() {
                                 RegistrationScreen(
                                     navController = navController,
                                     registrationHandler = registrationHandler,
+                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("resetpassword") {
+                                ResetPasswordScreen(
+                                    navController = navController,
+                                    resetPasswordHandler = ResetPasswordHandler(this@MainActivity),
                                     onMenuClick = { scope.launch { drawerState.open() } }
                                 )
                             }

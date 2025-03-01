@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pollingandroidv2"
+    namespace = "com.pollingandroid"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.pollingandroidv2"
+        applicationId = "com.pollingandroid"
         minSdk = 28
         targetSdk = 35
         versionCode = 1

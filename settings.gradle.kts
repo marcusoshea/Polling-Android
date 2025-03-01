@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Polling Android V2"
+rootProject.name = "Polling Android"
 include(":app")
  

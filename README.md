@@ -3,9 +3,10 @@ Replicating website ( https://www.AEPolling.org - https://github.com/marcusoshea
 Completed:
 * Login Authentication
 * Logout
+* Registration
   
 TODO:
-* Registration
+* Reset Password
 * Profile
 * Pollings
 * Candidates

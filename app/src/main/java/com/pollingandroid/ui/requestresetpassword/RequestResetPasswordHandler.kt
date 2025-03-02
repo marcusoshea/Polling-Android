@@ -1,4 +1,4 @@
-package com.pollingandroid.ui.resetpassword
+package com.pollingandroid.ui.requestresetpassword
 
 import android.annotation.SuppressLint
 import android.content.Context

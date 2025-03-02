@@ -1,6 +1,5 @@
-package com.pollingandroid.ui.resetpassword
+package com.pollingandroid.ui.requestresetpassword
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,16 +10,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
-import com.pollingandroid.api.RetrofitInstance
-import com.pollingandroid.model.PollingOrder
 import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.ui.theme.Black
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons

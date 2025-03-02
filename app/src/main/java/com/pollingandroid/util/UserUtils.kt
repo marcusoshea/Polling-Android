@@ -61,8 +61,7 @@ object UserUtils {
     }
 
     fun isUserLoggedIn(context: Context): Boolean {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val encryptedMemberName = sharedPreferences.getString(MEMBER_NAME_KEY, null)
+        val encryptedMemberName = SecureStorage.retrieve(MEMBER_NAME_KEY)
         return encryptedMemberName?.let { decryptData(it) } != null
     }
 }

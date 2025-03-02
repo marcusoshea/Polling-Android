@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
+import com.pollingandroid.ui.login.SecureStorage
 import com.pollingandroid.ui.theme.PollingAndroidTheme
 
 class SignOutActivity : ComponentActivity() {
@@ -47,6 +48,10 @@ fun SignOutScreen() {
 }
 
 private fun signOut(context: Context) {
+    // Clear SharedPreferences
     val sharedPreferences = context.getSharedPreferences("secure_prefs", Context.MODE_PRIVATE)
     sharedPreferences.edit().clear().apply()
+
+    // Clear SecureStorage
+    SecureStorage.clear()
 }

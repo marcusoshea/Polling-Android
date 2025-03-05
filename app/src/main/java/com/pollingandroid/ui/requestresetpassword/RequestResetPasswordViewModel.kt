@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.pollingandroid.model.PollingOrder
 
-class ResetPasswordViewModel : ViewModel() {
+class RequestResetPasswordViewModel : ViewModel() {
 
     private val _email = MutableLiveData<String>()
     val email: LiveData<String> = _email

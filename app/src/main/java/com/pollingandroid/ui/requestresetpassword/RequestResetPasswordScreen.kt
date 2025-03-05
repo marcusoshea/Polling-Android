@@ -27,29 +27,29 @@ import com.pollingandroid.util.PollingOrderUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResetPasswordScreen(
+fun RequestResetPasswordScreen(
     navController: NavController,
-    resetPasswordHandler: ResetPasswordHandler,
+    requestResetPasswordHandler: RequestResetPasswordHandler,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
-    resetPasswordViewModel: ResetPasswordViewModel = viewModel()
+    requestResetPasswordViewModel: RequestResetPasswordViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val email by resetPasswordViewModel.email.observeAsState("")
-    val pollingOrders by resetPasswordViewModel.pollingOrders.observeAsState(emptyList())
-    val selectedPollingOrder by resetPasswordViewModel.selectedPollingOrder.observeAsState(null)
-    val isLoading by resetPasswordViewModel.isLoading.observeAsState(false)
+    val email by requestResetPasswordViewModel.email.observeAsState("")
+    val pollingOrders by requestResetPasswordViewModel.pollingOrders.observeAsState(emptyList())
+    val selectedPollingOrder by requestResetPasswordViewModel.selectedPollingOrder.observeAsState(null)
+    val isLoading by requestResetPasswordViewModel.isLoading.observeAsState(false)
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         PollingOrderUtils.fetchPollingOrders { orders ->
-            resetPasswordViewModel.setPollingOrders(orders)
+            requestResetPasswordViewModel.setPollingOrders(orders)
         }
     }
 
     Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
         TopAppBar(
-            title = { Text("Reset Password") },
+            title = { Text("Request Reset Password") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = SecondaryColor
             )
@@ -66,7 +66,7 @@ fun ResetPasswordScreen(
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = email,
-                onValueChange = { resetPasswordViewModel.setEmail(it) },
+                onValueChange = { requestResetPasswordViewModel.setEmail(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -98,7 +98,7 @@ fun ResetPasswordScreen(
                         DropdownMenuItem(
                             text = { Text(order.toString()) },
                             onClick = {
-                                resetPasswordViewModel.setSelectedPollingOrder(order)
+                                requestResetPasswordViewModel.setSelectedPollingOrder(order)
                                 expanded = false
                                 val encryptedOrderName = UserUtils.encryptData(order.toString())
                                 SecureStorage.store("PollingOrderName", encryptedOrderName)
@@ -111,12 +111,12 @@ fun ResetPasswordScreen(
             Spacer(modifier = Modifier.height(40.dp))
             Button(
                 onClick = {
-                    resetPasswordViewModel.setLoading(true)
-                    resetPasswordHandler.handleResetPassword(
+                    requestResetPasswordViewModel.setLoading(true)
+                    requestResetPasswordHandler.handleRequestResetPassword(
                         email,
                         selectedPollingOrder?.polling_order_id ?: 0
                     ) { logSuccess ->
-                        resetPasswordViewModel.setLoading(false)
+                        requestResetPasswordViewModel.setLoading(false)
                         if (logSuccess) {
                             navController.navigate("login")
                         }
@@ -129,7 +129,7 @@ fun ResetPasswordScreen(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Reset Password")
+                    Text("Request Reset Password")
                 }
             }
         }

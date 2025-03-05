@@ -3,6 +3,7 @@ package com.pollingandroid.api
 import com.pollingandroid.model.LoginRequest
 import com.pollingandroid.model.PollingOrder
 import com.pollingandroid.model.RegistrationRequest
+import com.pollingandroid.model.ResetPassword
 import com.pollingandroid.model.ResetPasswordRequest
 
 import retrofit2.Call
@@ -24,21 +25,7 @@ interface PollingApi {
     @POST("/member/passwordToken")
     fun requestResetPassword(@Body resetPasswordRequest: ResetPasswordRequest): Call<ResponseBody>
 
+    @POST("verify/:token")
+    fun resetPassword(@Body resetPassword: ResetPassword): Call<ResponseBody>
 
 }
-
-
-/*
-const created = today.toISOString().split('T')[0];
-
-return this.http.post(
-API_URL + '/member/create',
-{ "name": memberName,
-    "email": email,
-    "password": password,
-    "polling_order_id": polling_order_id,
-    "pom_created_at": created,
-},
-httpOptions
-);
-*/

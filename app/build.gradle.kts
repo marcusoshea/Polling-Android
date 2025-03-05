@@ -41,7 +41,7 @@ android {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
+    implementation("androidx.core:core-ktx:1.12.0")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -68,9 +68,9 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.1")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.1")
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("androidx.databinding:databinding-runtime:7.0.0")
-    implementation("androidx.databinding:databinding-common:7.0.0")
-    implementation("androidx.databinding:databinding-adapters:7.0.0")
+    implementation("androidx.databinding:databinding-runtime:8.2.0")
+    implementation("androidx.databinding:databinding-common:8.2.0")
+    implementation("androidx.databinding:databinding-adapters:8.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

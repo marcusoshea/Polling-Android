@@ -1,78 +1,85 @@
-package com.pollingandroid.ui.login
+package com.pollingandroid.ui.resetpassword
 
-import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
-import com.pollingandroid.api.RetrofitInstance
-import com.pollingandroid.model.PollingOrder
 import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.ui.theme.Black
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import com.pollingandroid.util.PollingOrderUtils
 import com.pollingandroid.util.UserUtils
+import com.pollingandroid.util.PollingOrderUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun ResetPasswordScreen(
     navController: NavController,
-    loginHandler: LoginHandler,
+    token: String,
+    resetPasswordHandler: ResetPasswordHandler = ResetPasswordHandler(LocalContext.current),
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
-    loginViewModel: LoginViewModel = viewModel()
+    resetPasswordViewModel: ResetPasswordViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val email by loginViewModel.email.observeAsState("")
-    val password by loginViewModel.password.observeAsState("")
-    val pollingOrders by loginViewModel.pollingOrders.observeAsState(emptyList())
-    val selectedPollingOrder by loginViewModel.selectedPollingOrder.observeAsState(null)
-    val isLoading by loginViewModel.isLoading.observeAsState(false)
+    val email by resetPasswordViewModel.email.observeAsState("")
+    val password by resetPasswordViewModel.password.observeAsState("")
+    val pollingOrders by resetPasswordViewModel.pollingOrders.observeAsState(emptyList())
+    val selectedPollingOrder by resetPasswordViewModel.selectedPollingOrder.observeAsState(null)
+    val isLoading by resetPasswordViewModel.isLoading.observeAsState(false)
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         PollingOrderUtils.fetchPollingOrders { orders ->
-            loginViewModel.setPollingOrders(orders)
+            resetPasswordViewModel.setPollingOrders(orders)
+        }
+        if (token.isEmpty()) {
+            navController.navigate("login")
         }
     }
 
     Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
         TopAppBar(
-            title = { Text("Welcome to ÆPolling") },
+            title = { Text("Reset Password") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = SecondaryColor
             )
         )
-        Column(
-            modifier = modifier
-                .weight(1f)  // Takes remaining space
-                .padding(horizontal = 30.dp, vertical = 16.dp)
-        ) {
+        Column(modifier = modifier.padding(30.dp)) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back to Login",
+                tint = Color.White,
+                modifier = Modifier
+                    .background(color = SecondaryColor, shape = CircleShape)
+                    .padding(8.dp)
+                    .clickable { navController.navigate("login") })
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = email,
-                onValueChange = { loginViewModel.setEmail(it) },
+                onValueChange = { resetPasswordViewModel.setEmail(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = password,
-                onValueChange = { loginViewModel.setPassword(it) },
+                onValueChange = { resetPasswordViewModel.setPassword(it) },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
@@ -104,7 +111,7 @@ fun LoginScreen(
                         DropdownMenuItem(
                             text = { Text(order.toString()) },
                             onClick = {
-                                loginViewModel.setSelectedPollingOrder(order)
+                                resetPasswordViewModel.setSelectedPollingOrder(order)
                                 expanded = false
                                 val encryptedOrderName = UserUtils.encryptData(order.toString())
                                 SecureStorage.store("PollingOrderName", encryptedOrderName)
@@ -117,15 +124,15 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(40.dp))
             Button(
                 onClick = {
-                    loginViewModel.setLoading(true)
-                    loginHandler.handleLogin(
+                    resetPasswordViewModel.setLoading(true)
+                    resetPasswordHandler.handleResetPassword(
                         email,
                         password,
                         selectedPollingOrder?.polling_order_id ?: 0
                     ) { logSuccess ->
-                        loginViewModel.setLoading(false)
+                        resetPasswordViewModel.setLoading(false)
                         if (logSuccess) {
-                            navController.navigate("home")
+                            navController.navigate("login")
                         }
                     }
                 },
@@ -136,28 +143,7 @@ fun LoginScreen(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Login")
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                TextButton(
-                    onClick = { navController.navigate("register") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
-                ) {
-                    Text("Register")
-                }
-                TextButton(
-                    onClick = { navController.navigate("requestresetpassword") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
-                ) {
-                    Text("Forgot Password")
+                    Text("Reset Password")
                 }
             }
         }

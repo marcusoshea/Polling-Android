@@ -21,7 +21,9 @@ import com.pollingandroid.ui.components.TopAppBar
 import com.pollingandroid.ui.theme.Gold
 import com.pollingandroid.ui.theme.TextBoxBackground
 import com.pollingandroid.ui.theme.PrimaryColor
+import com.pollingandroid.ui.theme.SecondaryColor
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +44,8 @@ fun ProfileScreen(
         var name by remember { mutableStateOf(memberInfo.value?.name ?: "") }
         var email by remember { mutableStateOf(memberInfo.value?.email ?: "") }
         var active by remember { mutableStateOf(memberInfo.value?.active ?: false) }
+        var currentPassword by remember { mutableStateOf("") }
+        var newPassword by remember { mutableStateOf("") }
 
         Scaffold(
             topBar = {
@@ -73,7 +77,8 @@ fun ProfileScreen(
                             label = { Text("Name") },
                             colors = TextFieldDefaults.outlinedTextFieldColors(
                                 containerColor = TextBoxBackground
-                            )
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
@@ -82,7 +87,8 @@ fun ProfileScreen(
                             label = { Text("Email") },
                             colors = TextFieldDefaults.outlinedTextFieldColors(
                                 containerColor = TextBoxBackground
-                            )
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
@@ -99,6 +105,48 @@ fun ProfileScreen(
                             profileViewModel.updateProfile(context, name, email, active)
                         }) {
                             Text("Update Profile")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(color = Gold)
+                            .padding(20.dp)
+                            .fillMaxWidth(.95f)
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = currentPassword,
+                            onValueChange = { currentPassword = it },
+                            label = { Text("Current Password") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = TextBoxBackground
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = newPassword,
+                            onValueChange = { newPassword = it },
+                            label = { Text("New Password") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = TextBoxBackground
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                profileViewModel.updatePassword(context, currentPassword, newPassword)
+                            },
+                            enabled = currentPassword.length >= 6 && newPassword.length >= 6,
+                            colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor)
+                        ) {
+                            Text("Change Password")
                         }
                     }
                 }

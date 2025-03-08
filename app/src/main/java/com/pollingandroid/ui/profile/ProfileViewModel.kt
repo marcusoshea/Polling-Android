@@ -33,4 +33,16 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
+    fun updatePassword(context: Context, currentPassword: String, newPassword: String) {
+        val member = memberInfo.value ?: return
+        val accessToken = UserUtils.decryptData(SecureStorage.retrieve("accessToken").toString()) ?: return
+        ProfileHandler(context).updatePassword(
+            member.email,
+            currentPassword,
+            newPassword,
+            member.pollingOrder.toString(),
+            accessToken
+        ) {}
+    }
 }

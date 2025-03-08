@@ -42,4 +42,33 @@ class ProfileHandler(private val context: Context) {
             }
         })
     }
+
+    fun updatePassword(email: String, password: String, newPassword: String, pollingOrderId: String, accessToken: String, callback: (Boolean) -> Unit) {
+        val reqHeader = mapOf(
+            "Content-Type" to "application/json",
+            "Authorization" to "Bearer ${accessToken.replace("\n", "").trim()}"
+        )
+        val body = mapOf(
+            "email" to email,
+            "password" to password,
+            "newPassword" to newPassword,
+            "pollingOrderId" to pollingOrderId
+        )
+        RetrofitInstance.api.updatePassword(body, reqHeader).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Password updated successfully", Toast.LENGTH_SHORT).show()
+                    callback(true)
+                } else {
+                    Toast.makeText(context, "Password update failed", Toast.LENGTH_SHORT).show()
+                    callback(false)
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(context, "Password update failed: ${t.message}", Toast.LENGTH_SHORT).show()
+                callback(false)
+            }
+        })
+    }
 }

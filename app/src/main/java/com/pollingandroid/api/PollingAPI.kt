@@ -38,5 +38,10 @@ interface PollingApi {
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
+    @PUT("/member/changePassword")
+    fun updatePassword(
+        @Body body: Map<String, String>,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
 
 }

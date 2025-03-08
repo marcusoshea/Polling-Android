@@ -38,6 +38,7 @@ val PrimaryColor = Blue
 val SecondaryColor = Burnt
 val TertiaryColor = Gold
 val TextColor = Black
+val TextBoxBackground = Yellow
 
 
 

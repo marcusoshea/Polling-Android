@@ -19,9 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.clip
 import com.pollingandroid.ui.components.TopAppBar
 import com.pollingandroid.ui.theme.Gold
+import com.pollingandroid.ui.theme.TextBoxBackground
 import com.pollingandroid.ui.theme.PrimaryColor
 import androidx.compose.ui.text.font.FontStyle
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController = rememberNavController(),
@@ -30,13 +32,16 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val pollingOrderName = profileViewModel.pollingOrderName.observeAsState("").value
+    val memberInfo = profileViewModel.memberInfo.observeAsState()
 
     if (!isUserLoggedIn(context)) {
         LaunchedEffect(Unit) {
             navController.navigate("login")
         }
     } else {
-        val text by profileViewModel.text.observeAsState("")
+        var name by remember { mutableStateOf(memberInfo.value?.name ?: "") }
+        var email by remember { mutableStateOf(memberInfo.value?.email ?: "") }
+        var active by remember { mutableStateOf(memberInfo.value?.active ?: false) }
 
         Scaffold(
             topBar = {
@@ -61,10 +66,40 @@ fun ProfileScreen(
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {
-                        Text(
-                            text = text,
-                            style = LocalTextStyle.current.copy(fontStyle = FontStyle.Italic)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Name") },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = TextBoxBackground
+                            )
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = TextBoxBackground
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = active,
+                                onCheckedChange = { active = it }
+                            )
+                            Text("Active")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            profileViewModel.updateProfile(context, name, email, active)
+                        }) {
+                            Text("Update Profile")
+                        }
                     }
                 }
             }

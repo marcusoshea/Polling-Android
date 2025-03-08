@@ -59,7 +59,7 @@ fun LoginScreen(
         )
         Column(
             modifier = modifier
-                .weight(1f)  // Takes remaining space
+                .weight(1f)
                 .padding(horizontal = 30.dp, vertical = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))

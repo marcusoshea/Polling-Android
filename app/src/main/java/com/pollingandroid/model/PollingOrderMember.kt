@@ -7,4 +7,5 @@ data class PollingOrderMember (
    val memberId: Int,
    val name: String,
    val email: String,
-   val active: Boolean){}
+   val active: Boolean
+){}

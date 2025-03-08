@@ -11,6 +11,9 @@ import retrofit2.http.GET
 import retrofit2.http.Body
 import retrofit2.http.POST
 import okhttp3.ResponseBody
+import retrofit2.http.HeaderMap
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface PollingApi {
     @GET("pollingorder")
@@ -27,5 +30,13 @@ interface PollingApi {
 
     @POST("verify/:token")
     fun resetPassword(@Body resetPassword: ResetPassword): Call<ResponseBody>
+
+    @PUT("/member/edit/{memberId}")
+    fun updateProfile(
+        @Path("memberId") memberId: Int,
+        @Body body: Map<String, String>,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
 
 }

@@ -1,5 +1,6 @@
 package com.pollingandroid
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,6 +46,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val intent = intent
+            val action = intent.action
+            val data = intent.data
+
+            if (Intent.ACTION_VIEW == action && data != null) {
+                val token = data.getQueryParameter("token")
+                if (token != null) {
+                    val navController = rememberNavController()
+                    navController.navigate("resetpassword?token=$token")
+                }
+            }
             PollingAndroidTheme {
                 val navController = rememberNavController()
                 val drawerState = rememberDrawerState(DrawerValue.Closed)

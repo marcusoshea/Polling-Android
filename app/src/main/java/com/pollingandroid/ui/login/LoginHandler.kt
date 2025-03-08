@@ -26,12 +26,13 @@ class LoginHandler(private val context: Context) {
                         val encryptedAccessToken = UserUtils.encryptData(pollingOrderMember.access_token)
                         val encryptedEmail = UserUtils.encryptData(pollingOrderMember.email)
                         SecureStorage.store("memberName", encryptedName)
+                        SecureStorage.store("email", encryptedEmail)
+                        SecureStorage.store("memberId", pollingOrderMember.memberId.toString())
+                        SecureStorage.store("pollingOrder", pollingOrderMember.pollingOrder.toString())
+                        SecureStorage.store("active", pollingOrderMember.active.toString())
                         SecureStorage.store("accessToken", encryptedAccessToken)
                         SecureStorage.store("isOrderAdmin", pollingOrderMember.isOrderAdmin.toString())
-                        SecureStorage.store("pollingOrder", pollingOrderMember.pollingOrder.toString())
-                        SecureStorage.store("memberId", pollingOrderMember.memberId.toString())
-                        SecureStorage.store("email", encryptedEmail)
-                        SecureStorage.store("active", pollingOrderMember.active.toString())
+
                         Toast.makeText(context, "Login successful: ${UserUtils.decryptData(encryptedName)}", Toast.LENGTH_SHORT).show()
                         callback(true)
                     } else {

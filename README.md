@@ -4,10 +4,10 @@ Completed:
 * Login Authentication
 * Logout
 * Registration
+* Profile
   
 TODO:
 * Reset Password
-* Profile
 * Pollings
 * Candidates
 * Report

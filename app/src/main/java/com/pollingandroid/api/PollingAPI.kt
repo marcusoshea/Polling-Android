@@ -44,4 +44,89 @@ interface PollingApi {
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
+    @GET("/polling/pollingreport/{orderId}")
+    fun getPollingReport(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/inprocesspollingreport/{orderId}")
+    fun getInProcessPollingReport(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @POST("/pollingnote/create")
+    fun createPollingNotes(
+        @Body body: List<Map<String, Any>>,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/currentpolling/{orderId}")
+    fun getCurrentPolling(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/pollingsummary/{pollingId}/{pollingOrderMemberId}")
+    fun getPollingSummary(
+        @Path("pollingId") pollingId: Int,
+        @Path("pollingOrderMemberId") pollingOrderMemberId: String,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/externalnote/candidate/{id}")
+    fun getExternalNoteByCandidateId(
+        @Path("id") id: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/allpn/{id}")
+    fun getPollingNoteByCandidateId(
+        @Path("id") id: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/pollingnote/all/{id}")
+    fun getAllPollingNotesById(
+        @Path("id") id: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/candidate/{candidateId}")
+    fun getCandidate(
+        @Path("candidateId") candidateId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @POST("/externalnote/create")
+    fun createExternalNote(
+        @Body body: Map<String, String>,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @POST("/externalnote/delete")
+    fun removeExternalNote(
+        @Body body: Map<String, String>,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/pollingnote/totals/{pollingId}")
+    fun getPollingReportTotals(
+        @Path("pollingId") pollingId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/candidate/all/{orderID}")
+    fun getAllCandidates(
+        @Path("orderID") orderID: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/candidate/candidateImages/{candidate_id}")
+    fun getAllCandidateImages(
+        @Path("candidate_id") candidateId: String,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
 }

@@ -23,7 +23,7 @@ class LoginViewModel : ViewModel() {
     val isLoading: LiveData<Boolean> = _isLoading
 
     fun setEmail(email: String) {
-        _email.value = email
+        _email.value = email.trim()
     }
 
     fun setPassword(password: String) {

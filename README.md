@@ -1,4 +1,4 @@
-Replicating website ( https://www.AEPolling.org - https://github.com/marcusoshea/Polling ) to native android app. 
+Replicating website ( https://polling.aethelmearc.org - https://github.com/marcusoshea/Polling ) to native android app. 
 
 Completed:
 * Login Authentication

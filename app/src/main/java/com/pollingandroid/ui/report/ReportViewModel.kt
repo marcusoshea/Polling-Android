@@ -2,7 +2,6 @@ package com.pollingandroid.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.util.Log
 import com.pollingandroid.repository.PollingReportRepository
 import com.pollingandroid.repository.PollingReportRepository.ReportData
 import com.pollingandroid.ui.login.SecureStorage
@@ -105,11 +104,6 @@ class ReportViewModel : ViewModel() {
             _isLoading.value = true
             _errorMessage.value = null
 
-            Log.d(
-                "ReportViewModel",
-                "Loading candidates, closedPollingAvailable: ${_closedPollingAvailable.value}, reportShown: $reportShown"
-            )
-
             try {
                 // Get the auth token and order ID
                 val authToken =
@@ -117,8 +111,6 @@ class ReportViewModel : ViewModel() {
                 val orderIdString =
                     SecureStorage.retrieve("pollingOrder")
                 val orderId = orderIdString?.toIntOrNull() ?: 0
-
-                Log.d("ReportViewModel", "Auth token: ${authToken?.take(10)}... OrderId: $orderId")
 
                 if (authToken != null && orderId > 0) {
                     if (_closedPollingAvailable.value) {
@@ -157,14 +149,9 @@ class ReportViewModel : ViewModel() {
                     }
                 } else {
                     _errorMessage.value = "Authentication error. Please login again."
-                    Log.e(
-                        "ReportViewModel",
-                        "Auth failed - token: ${authToken != null}, orderId: $orderId"
-                    )
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load data: ${e.message}"
-                Log.e("ReportViewModel", "Exception loading data", e)
             } finally {
                 _isLoading.value = false
             }

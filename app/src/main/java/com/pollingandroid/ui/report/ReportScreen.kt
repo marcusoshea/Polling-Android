@@ -199,7 +199,7 @@ fun ReportScreen(
                                     color = Black
                                 )
                             }
-                        } else if (inProcessPollingAvailable && pollingSummary != null) {
+                        } else if (0 && pollingSummary != null) {
                             // In-process polling content
                             Text(
                                 text = buildAnnotatedString {

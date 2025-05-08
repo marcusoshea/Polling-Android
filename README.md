@@ -6,11 +6,11 @@ Completed:
 * Registration
 * Profile
 * Report
+* Candidates
   
 TODO:
 * Reset Password
 * Pollings
-* Candidates
 
 Out of Scope:
 * Will not be replicating admin area

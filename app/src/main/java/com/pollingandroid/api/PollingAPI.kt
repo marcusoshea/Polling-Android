@@ -87,9 +87,17 @@ interface PollingApi {
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
-    @GET("/pollingnote/all/{id}")
+    /**
+     * Get all polling notes for a specific polling ID.
+     * The polling_notes_id must be passed in the request body,
+     * not as a path parameter. Required fields are:
+     * - polling_notes_id (String): The ID of the polling notes
+     * - authToken (String): The authentication token
+     * Note: authToken is included in both the request body and headers for consistency.
+     */
+    @POST("/pollingnote/all")
     fun getAllPollingNotesById(
-        @Path("id") id: Int,
+        @Body body: Map<String, String>,
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
@@ -126,6 +134,30 @@ interface PollingApi {
     @GET("/candidate/candidateImages/{candidate_id}")
     fun getAllCandidateImages(
         @Path("candidate_id") candidateId: String,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/pollingreport/{orderId}/summary")
+    fun getPollingReportSummary(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/pollingreport/{orderId}/details")
+    fun getPollingReportDetails(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/pollingreport/{orderId}/notes")
+    fun getPollingReportNotes(
+        @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/polling/pollingreport/{orderId}/candidates")
+    fun getPollingReportCandidates(
+        @Path("orderId") orderId: Int,
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 

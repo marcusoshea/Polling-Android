@@ -5,12 +5,12 @@ Completed:
 * Logout
 * Registration
 * Profile
+* Report
   
 TODO:
 * Reset Password
 * Pollings
 * Candidates
-* Report
 
 Out of Scope:
 * Will not be replicating admin area

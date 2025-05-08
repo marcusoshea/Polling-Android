@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import com.pollingandroid.ui.theme.LinkBlue
 import com.pollingandroid.util.UserUtils
 import com.pollingandroid.util.PollingOrderUtils
 
@@ -66,7 +67,7 @@ fun ResetPasswordScreen(
                 contentDescription = "Back to Login",
                 tint = Color.White,
                 modifier = Modifier
-                    .background(color = SecondaryColor, shape = CircleShape)
+                    .background(color = TertiaryColor, shape = CircleShape)
                     .padding(8.dp)
                     .clickable { navController.navigate("login") })
             Spacer(modifier = Modifier.height(8.dp))
@@ -137,7 +138,7 @@ fun ResetPasswordScreen(
                     }
                 },
                 enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor),
+                colors = ButtonDefaults.buttonColors(containerColor = LinkBlue),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 if (isLoading) {

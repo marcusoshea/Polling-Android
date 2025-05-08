@@ -17,6 +17,7 @@ import com.pollingandroid.util.UserUtils.isUserLoggedIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import com.pollingandroid.ui.components.TopAppBar
 import com.pollingandroid.ui.theme.Gold
 import com.pollingandroid.ui.theme.TextBoxBackground
@@ -24,6 +25,8 @@ import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.pollingandroid.ui.theme.LinkBlue
+import com.pollingandroid.ui.theme.TertiaryColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +69,7 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(color = Gold)
+                            .background(color = TertiaryColor)
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {
@@ -98,7 +101,7 @@ fun ProfileScreen(
                                 checked = active,
                                 onCheckedChange = { active = it }
                             )
-                            Text("Active")
+                            Text("Active", color = Color.Black)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
@@ -144,7 +147,7 @@ fun ProfileScreen(
                                 profileViewModel.updatePassword(context, currentPassword, newPassword)
                             },
                             enabled = currentPassword.length >= 6 && newPassword.length >= 6,
-                            colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor)
+                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
                         ) {
                             Text("Change Password")
                         }

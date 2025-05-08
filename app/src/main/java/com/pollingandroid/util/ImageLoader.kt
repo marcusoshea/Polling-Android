@@ -1,0 +1,1 @@
+// This file is intentionally left empty as we're using WebView for image loading instead

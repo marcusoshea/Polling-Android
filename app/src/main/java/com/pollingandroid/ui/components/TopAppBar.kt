@@ -22,7 +22,7 @@ fun TopAppBar(
             IconButton(onClick = onMenuClick) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_menu),
-                    contentDescription = "Menu"
+                    contentDescription = "Open navigation menu"
                 )
             }
         },

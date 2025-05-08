@@ -199,7 +199,7 @@ fun ReportScreen(
                                     color = Black
                                 )
                             }
-                        } else if (0 && pollingSummary != null) {
+                        } else if (inProcessPollingAvailable && pollingSummary != null) {
                             // In-process polling content
                             Text(
                                 text = buildAnnotatedString {
@@ -445,22 +445,47 @@ fun ReportScreen(
                                                                     )
                                                                 }
 
-                                                                Text(
-                                                                    text = "\"${note.note}\"",
-                                                                    style = MaterialTheme.typography.bodySmall,
-                                                                    color = Black
-                                                                )
+                                                                // Only show note text if not empty
+                                                                if (note.note.isNotBlank()) {
+                                                                    Text(
+                                                                        text = "\"${note.note}\"",
+                                                                        style = MaterialTheme.typography.bodySmall,
+                                                                        color = Black
+                                                                    )
+                                                                }
 
-                                                                Text(
-                                                                    text = "- ${note.memberName}",
-                                                                    style = MaterialTheme.typography.bodySmall.copy(
-                                                                        fontStyle = FontStyle.Italic
-                                                                    ),
-                                                                    modifier = Modifier.padding(
-                                                                        start = 8.dp
-                                                                    ),
-                                                                    color = Black
-                                                                )
+                                                                Row(
+                                                                    verticalAlignment = Alignment.CenterVertically,
+                                                                    modifier = Modifier.padding(end = 8.dp)
+                                                                ) {
+                                                                    Text(
+                                                                        text = "- ${note.memberName}",
+                                                                        style = MaterialTheme.typography.bodySmall.copy(
+                                                                            fontStyle = FontStyle.Italic
+                                                                        ),
+                                                                        modifier = Modifier.padding(
+                                                                            start = 8.dp
+                                                                        ),
+                                                                        color = Black
+                                                                    )
+
+                                                                    // Always show vote if present
+                                                                    if (note.vote.isNotEmpty()) {
+                                                                        Spacer(
+                                                                            modifier = Modifier.width(
+                                                                                8.dp
+                                                                            )
+                                                                        )
+                                                                        Text(
+                                                                            text = "(${note.vote})",
+                                                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                                                fontStyle = FontStyle.Italic,
+                                                                                fontWeight = FontWeight.Bold
+                                                                            ),
+                                                                            color = Black
+                                                                        )
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }

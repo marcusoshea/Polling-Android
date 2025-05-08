@@ -8,39 +8,24 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Burnt,
-    secondary = Blue,
-    tertiary = Gold,
-    background = Blue,
+    primary = PrimaryColor,
+    secondary = SecondaryColor,
+    tertiary = TertiaryColor,
+    background = PrimaryColor,
+    onPrimary = LinkBlue
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Burnt,
-    secondary = Blue,
-    tertiary = Gold,
-    background = Blue
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = PrimaryColor,
+    secondary = SecondaryColor,
+    tertiary = TertiaryColor,
+    background = PrimaryColor,
+    onPrimary = LinkBlue
 )
-
-val PrimaryColor = Blue
-val SecondaryColor = Burnt
-val TertiaryColor = Gold
-val TextColor = Black
-val TextBoxBackground = Yellow
-
-
 
 @Composable
 fun PollingAndroidTheme(

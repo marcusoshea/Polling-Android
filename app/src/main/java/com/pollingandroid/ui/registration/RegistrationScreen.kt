@@ -70,7 +70,7 @@ fun RegistrationScreen(
                 contentDescription = "Back to Login",
                 tint = Color.White,
                 modifier = Modifier
-                    .background(color = SecondaryColor, shape = CircleShape)
+                    .background(color = TertiaryColor, shape = CircleShape)
                     .padding(8.dp)
                     .clickable { navController.navigate("login") })
             Spacer(modifier = Modifier.height(8.dp))

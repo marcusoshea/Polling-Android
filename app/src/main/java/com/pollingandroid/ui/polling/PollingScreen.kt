@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import com.pollingandroid.ui.components.TopAppBar
 import com.pollingandroid.ui.theme.Gold
 import com.pollingandroid.ui.theme.PrimaryColor
+import com.pollingandroid.ui.theme.TertiaryColor
 import androidx.compose.ui.text.font.FontStyle
 
 @Composable
@@ -57,7 +58,7 @@ fun PollingScreen(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(color = Gold)
+                            .background(color = TertiaryColor)
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {

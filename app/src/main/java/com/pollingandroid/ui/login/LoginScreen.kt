@@ -17,12 +17,14 @@ import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.ui.theme.Black
+import com.pollingandroid.ui.theme.LinkBlue
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.PopupProperties
 import com.pollingandroid.util.PollingOrderUtils
 import com.pollingandroid.util.UserUtils
@@ -50,7 +52,9 @@ fun LoginScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
+    Column(modifier = modifier
+        .fillMaxSize()
+        .background(color = PrimaryColor)) {
         TopAppBar(
             title = { Text("Welcome to ÆPolling") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -130,13 +134,13 @@ fun LoginScreen(
                     }
                 },
                 enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor),
+                colors = ButtonDefaults.buttonColors(containerColor = LinkBlue),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Login")
+                    Text("Login", color = Color.White)
                 }
             }
 

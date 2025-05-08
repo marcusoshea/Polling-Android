@@ -42,7 +42,8 @@ data class Candidate(
 data class Note(
     val note: String,
     val private: Boolean,
-    val memberName: String
+    val memberName: String,
+    val vote: String = ""
 )
 
 class ReportViewModel : ViewModel() {

@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import com.pollingandroid.ui.components.TopAppBar
 import com.pollingandroid.ui.theme.Gold
 import com.pollingandroid.ui.theme.PrimaryColor
+import com.pollingandroid.ui.theme.TertiaryColor
 import androidx.compose.foundation.background
 import androidx.compose.ui.text.font.FontStyle
 
@@ -58,7 +59,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(color = Gold)
+                        .background(color = TertiaryColor)
                         .padding(20.dp)
                         .fillMaxWidth(.95f)
                     ) {

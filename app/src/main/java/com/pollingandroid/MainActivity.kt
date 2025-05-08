@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                                 Column(
                                     modifier = modifier
                                         .clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
-                                        .background(color = SecondaryColor)
+                                        .background(color = TertiaryColor)
                                         .padding(20.dp)
                                 ) {
                                     Text(

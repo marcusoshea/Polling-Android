@@ -170,12 +170,14 @@ class PollingReportRepository {
                         val noteText = noteJson.getString("note")
                         val isPrivate = noteJson.getBoolean("private")
                         val memberName = noteJson.getString("memberName")
+                        val vote = noteJson.optString("vote", "")
 
                         notesList.add(
                             Note(
                                 note = noteText,
                                 private = isPrivate,
-                                memberName = memberName
+                                memberName = memberName,
+                                vote = vote
                             )
                         )
                     }
@@ -233,8 +235,6 @@ class PollingReportRepository {
             for (i in 0 until jsonArray.length()) {
                 val noteJson = jsonArray.getJSONObject(i)
 
-                if (noteJson.isNull("note")) continue
-
                 val noteMap = mutableMapOf<String, Any>()
 
                 noteMap["polling_notes_id"] = noteJson.optInt("polling_notes_id", 0)
@@ -243,6 +243,16 @@ class PollingReportRepository {
                 noteMap["note"] = noteJson.optString("note", "")
                 noteMap["private"] = noteJson.optBoolean("private", false)
                 noteMap["member_name"] = noteJson.optString("member_name", "")
+
+                val voteValue = noteMap["vote"] as? Int
+                val voteString = when (voteValue) {
+                    1 -> "Yes"
+                    2 -> "Wait"
+                    3 -> "No"
+                    4 -> "Abstain"
+                    else -> ""
+                }
+                noteMap["vote"] = voteString
 
                 notesList.add(noteMap)
             }
@@ -260,15 +270,11 @@ class PollingReportRepository {
                 val voteJson = jsonArray.getJSONObject(i)
 
                 val rawVoteText = voteJson.optString("vote", "")
-                val voteValue = when {
-                    rawVoteText.equals("Yes", ignoreCase = true) -> "Yes"
-                    rawVoteText.equals("No", ignoreCase = true) -> "No"
-                    rawVoteText.equals("Wait", ignoreCase = true) -> "Wait"
-                    rawVoteText.equals("Abstain", ignoreCase = true) -> "Abstain"
-                    rawVoteText.equals("1", ignoreCase = true) -> "Yes"
-                    rawVoteText.equals("2", ignoreCase = true) -> "No"
-                    rawVoteText.equals("3", ignoreCase = true) -> "Wait"
-                    rawVoteText.equals("4", ignoreCase = true) -> "Abstain"
+                val voteValue = when (rawVoteText) {
+                    "1", "Yes", "yes" -> "Yes"
+                    "2", "Wait", "wait" -> "Wait"
+                    "3", "No", "no" -> "No"
+                    "4", "Abstain", "abstain" -> "Abstain"
                     else -> "Null"
                 }
 
@@ -391,15 +397,17 @@ class PollingReportRepository {
                 (note["candidate_id"] as? Int) == candidateId
             }.forEach { note ->
                 val noteText = note["note"] as? String
-                if (!noteText.isNullOrBlank()) {
-                    candidateNotes.add(
-                        Note(
-                            note = noteText,
-                            private = note["private"] as? Boolean ?: false,
-                            memberName = note["member_name"] as? String ?: "Unknown"
-                        )
+                val voteString = note["vote"] as? String ?: ""
+
+                // Always add the note, even if the text is blank
+                candidateNotes.add(
+                    Note(
+                        note = noteText ?: "",
+                        private = note["private"] as? Boolean ?: false,
+                        memberName = note["member_name"] as? String ?: "Unknown",
+                        vote = voteString
                     )
-                }
+                )
             }
 
             candidates.add(
@@ -563,7 +571,8 @@ class PollingReportRepository {
                                 Note(
                                     note = note,
                                     private = noteObj.optBoolean("private", false),
-                                    memberName = noteObj.optString("memberName", "Unknown")
+                                    memberName = noteObj.optString("memberName", "Unknown"),
+                                    vote = noteObj.optString("vote", "")
                                 )
                             )
                         }

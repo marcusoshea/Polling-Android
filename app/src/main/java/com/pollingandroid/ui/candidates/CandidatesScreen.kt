@@ -692,7 +692,11 @@ fun CandidateDetail(
                                     if (image.description.contains("<html") ||
                                         image.description.contains("<body") ||
                                         image.description.contains("<div") ||
-                                        image.description.contains("<p>")
+                                        image.description.contains("<p>") ||
+                                        image.description.contains("<font") ||
+                                        image.description.contains("<") && image.description.contains(
+                                            ">"
+                                        )
                                     ) {
                                         var webViewHeight by remember { mutableStateOf(250.dp) }
                                         AndroidView(
@@ -730,7 +734,43 @@ fun CandidateDetail(
                                                     setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                                     loadDataWithBaseURL(
                                                         null,
-                                                        "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style></head><body>${image.description}</body></html>",
+                                                        buildString {
+                                                            append("<html><head>")
+                                                            append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
+                                                            append("<style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style>")
+                                                            append("</head><body>")
+                                                            // If the description already contains complete HTML structure, use as is
+                                                            // Otherwise wrap the content
+                                                            if (image.description.trim()
+                                                                    .startsWith("<html") &&
+                                                                image.description.trim()
+                                                                    .endsWith("</html>")
+                                                            ) {
+                                                                // Extract the body content if it's a complete HTML document
+                                                                val bodyStart =
+                                                                    image.description.indexOf("<body")
+                                                                val bodyEnd =
+                                                                    image.description.indexOf("</body>")
+                                                                if (bodyStart >= 0 && bodyEnd >= 0) {
+                                                                    val bodyTagEnd =
+                                                                        image.description.indexOf(
+                                                                            ">",
+                                                                            bodyStart
+                                                                        )
+                                                                    append(
+                                                                        image.description.substring(
+                                                                            bodyTagEnd + 1,
+                                                                            bodyEnd
+                                                                        )
+                                                                    )
+                                                                } else {
+                                                                    append(image.description)
+                                                                }
+                                                            } else {
+                                                                append(image.description)
+                                                            }
+                                                            append("</body></html>")
+                                                        },
                                                         "text/html",
                                                         "UTF-8",
                                                         null

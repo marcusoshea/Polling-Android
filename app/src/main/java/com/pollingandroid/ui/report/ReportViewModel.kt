@@ -40,7 +40,7 @@ data class Candidate(
 )
 
 data class Note(
-    val note: String,
+    val note: String?,
     val private: Boolean,
     val memberName: String,
     val vote: String = ""

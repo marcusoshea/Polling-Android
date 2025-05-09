@@ -120,7 +120,7 @@ fun ReportScreen(
                         .padding(vertical = 8.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Gold
+                        containerColor = TertiaryColor
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -322,7 +322,7 @@ fun ReportScreen(
                                         .padding(vertical = 4.dp),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Gold
+                                        containerColor = TertiaryColor
                                     )
                                 ) {
                                     var expanded by remember { mutableStateOf(false) }
@@ -424,47 +424,93 @@ fun ReportScreen(
 
                                             if (expanded) {
                                                 Column {
-                                                    candidate.notes.forEach { note ->
-                                                        Row(
-                                                            modifier = Modifier.padding(vertical = 4.dp)
-                                                        ) {
-                                                            Text(
-                                                                text = "• ",
-                                                                style = MaterialTheme.typography.bodySmall,
-                                                                color = Black
-                                                            )
+                                                    // Sort notes - non-null notes first
+                                                    val sortedNotes = candidate.notes.sortedWith(
+                                                        compareByDescending<Note> { it.note != null && it.note != "null" && it.note.isNotBlank() }
+                                                    )
 
-                                                            Column {
-                                                                if (note.private) {
-                                                                    Text(
-                                                                        text = "--PRIVATE RESPONSE--",
-                                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                                            fontWeight = FontWeight.Bold
-                                                                        ),
-                                                                        color = Black
-                                                                    )
-                                                                }
+                                                    sortedNotes.forEach { note ->
+                                                        if (note.note != null && note.note != "null" && note.note.isNotBlank()) {
+                                                            // Display full note with content
+                                                            Row(
+                                                                modifier = Modifier.padding(vertical = 4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = "• ",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = Black
+                                                                )
 
-                                                                // Only show note text if not empty
-                                                                if (note.note.isNotBlank()) {
+                                                                Column {
+                                                                    if (note.private) {
+                                                                        Text(
+                                                                            text = "--PRIVATE RESPONSE--",
+                                                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                                                fontWeight = FontWeight.Bold
+                                                                            ),
+                                                                            color = Black
+                                                                        )
+                                                                    }
+
                                                                     Text(
                                                                         text = "\"${note.note}\"",
                                                                         style = MaterialTheme.typography.bodySmall,
                                                                         color = Black
                                                                     )
-                                                                }
 
-                                                                Row(
-                                                                    verticalAlignment = Alignment.CenterVertically,
-                                                                    modifier = Modifier.padding(end = 8.dp)
-                                                                ) {
+                                                                    Row(
+                                                                        verticalAlignment = Alignment.CenterVertically,
+                                                                        modifier = Modifier.padding(
+                                                                            end = 8.dp
+                                                                        )
+                                                                    ) {
+                                                                        Text(
+                                                                            text = "- ${note.memberName}",
+                                                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                                                fontStyle = FontStyle.Italic
+                                                                            ),
+                                                                            modifier = Modifier.padding(
+                                                                                start = 8.dp
+                                                                            ),
+                                                                            color = Black
+                                                                        )
+
+                                                                        // Always show vote if present
+                                                                        if (note.vote.isNotEmpty()) {
+                                                                            Spacer(
+                                                                                modifier = Modifier.width(
+                                                                                    8.dp
+                                                                                )
+                                                                            )
+                                                                            Text(
+                                                                                text = "(${note.vote})",
+                                                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                                                    fontStyle = FontStyle.Italic,
+                                                                                    fontWeight = FontWeight.Bold
+                                                                                ),
+                                                                                color = Black
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        } else {
+                                                            // For null/blank notes, just show member name and vote
+                                                            Row(
+                                                                modifier = Modifier.padding(vertical = 4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = "• ",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = Black
+                                                                )
+
+                                                                // Simple row with just the member name and vote
+                                                                Row(verticalAlignment = Alignment.CenterVertically) {
                                                                     Text(
-                                                                        text = "- ${note.memberName}",
+                                                                        text = note.memberName,
                                                                         style = MaterialTheme.typography.bodySmall.copy(
                                                                             fontStyle = FontStyle.Italic
-                                                                        ),
-                                                                        modifier = Modifier.padding(
-                                                                            start = 8.dp
                                                                         ),
                                                                         color = Black
                                                                     )

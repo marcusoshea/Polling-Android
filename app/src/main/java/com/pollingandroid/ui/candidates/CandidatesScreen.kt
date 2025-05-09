@@ -689,11 +689,70 @@ fun CandidateDetail(
                                     .padding(start = 16.dp)
                             ) {
                                 if (image.description.isNotEmpty()) {
-                                    Text(
-                                        text = image.description,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Black
-                                    )
+                                    if (image.description.contains("<html") ||
+                                        image.description.contains("<body") ||
+                                        image.description.contains("<div") ||
+                                        image.description.contains("<p>")
+                                    ) {
+                                        var webViewHeight by remember { mutableStateOf(250.dp) }
+                                        AndroidView(
+                                            factory = { context ->
+                                                WebView(context).apply {
+                                                    webViewClient = object : WebViewClient() {
+                                                        override fun onPageFinished(
+                                                            view: WebView?,
+                                                            url: String?
+                                                        ) {
+                                                            super.onPageFinished(view, url)
+                                                            view?.evaluateJavascript(
+                                                                "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
+                                                            ) { height ->
+                                                                try {
+                                                                    val contentHeight =
+                                                                        height.toFloat().toInt()
+                                                                    val calculatedHeight =
+                                                                        contentHeight / context.resources.displayMetrics.density
+                                                                    webViewHeight = maxOf(
+                                                                        250.dp,
+                                                                        (calculatedHeight + 100).dp
+                                                                    )
+                                                                } catch (e: Exception) {
+                                                                    webViewHeight = 250.dp
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    settings.apply {
+                                                        javaScriptEnabled = true
+                                                        useWideViewPort = true
+                                                        loadWithOverviewMode = true
+                                                    }
+                                                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                                    loadDataWithBaseURL(
+                                                        null,
+                                                        "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style></head><body>${image.description}</body></html>",
+                                                        "text/html",
+                                                        "UTF-8",
+                                                        null
+                                                    )
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(webViewHeight)
+                                                .background(TertiaryColor)
+                                                .padding(bottom = 8.dp),
+                                            update = { webView ->
+                                                // Update the WebView when needed
+                                            }
+                                        )
+                                    } else {
+                                        Text(
+                                            text = image.description,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black
+                                        )
+                                    }
                                 }
                             }
                         }

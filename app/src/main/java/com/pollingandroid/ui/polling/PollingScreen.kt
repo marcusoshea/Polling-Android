@@ -287,7 +287,99 @@ private fun ActivePollingContent(
 
     // Create mutable state for votes
     val votes = remember(candidateVotes) {
-        candidateVotes.associateBy { it.candidateId }.toMutableMap()
+        // Log the initial votes to debug
+        android.util.Log.d("PollingScreen", "Initial candidateVotes: ${candidateVotes.size}")
+        candidateVotes.forEach { vote ->
+            android.util.Log.d(
+                "PollingScreen",
+                "CandidateID: ${vote.candidateId}, Vote: ${vote.vote}, Name: ${vote.candidateName}"
+            )
+        }
+
+        val voteMap = candidateVotes.associateBy { it.candidateId }.toMutableMap()
+
+        // Log the map after creation
+        android.util.Log.d("PollingScreen", "Initial vote map size: ${voteMap.size}")
+        voteMap.values.forEach { vote ->
+            android.util.Log.d(
+                "PollingScreen",
+                "Map - CandidateID: ${vote.candidateId}, Vote: ${vote.vote}, Name: ${vote.candidateName}"
+            )
+        }
+
+        voteMap
+    }
+
+    // Track if all votes are completed (to trigger recomposition)
+    var voteUpdateCounter by remember { mutableStateOf(0) }
+
+    // Track which candidates have had their votes explicitly selected
+    val selectedVotes = remember { mutableStateMapOf<Int, Boolean>() }
+
+    // Initialize the selectedVotes map with all candidates set to false (not explicitly selected)
+    // Exception: if a vote already exists for a candidate, mark it as explicitly selected
+    LaunchedEffect(candidates, candidateVotes) {
+        candidates.forEach { candidate ->
+            // Check if there's an existing vote for this candidate
+            val existingVote = candidateVotes.find { it.candidateId == candidate.candidate_id }
+            val hasRealVote = existingVote?.vote != null
+
+            // If the vote is already set, mark it as explicitly selected
+            if (hasRealVote) {
+                selectedVotes[candidate.candidate_id] = true
+                android.util.Log.d(
+                    "PollingScreen",
+                    "Found existing vote for ${candidate.name}: ${existingVote?.vote}, marking as selected"
+                )
+            } else if (!selectedVotes.containsKey(candidate.candidate_id)) {
+                // Otherwise, initialize as not selected
+                selectedVotes[candidate.candidate_id] = false
+            }
+        }
+
+        // Force voteUpdateCounter to update to trigger button enablement check
+        voteUpdateCounter++
+    }
+
+    // Check if votes have already been submitted (has pollingNotesId and completed == true)
+    val hasSubmittedVotes = candidateVotes.any { vote ->
+        // Check if this vote has a pollingNotesId and is marked as completed
+        vote.pollingNotesId > 0 && vote.completed
+    }
+
+    // Special case for submitted votes - mark them all as selected without requiring UI interaction
+    LaunchedEffect(hasSubmittedVotes) {
+        if (hasSubmittedVotes) {
+            android.util.Log.d("PollingScreen", "Found submitted votes, marking all as selected")
+
+            // Check if all votes are complete and mark them as selected
+            var allVotesHaveValues = true
+            candidates.forEach { candidate ->
+                val vote = votes[candidate.candidate_id]
+                if (vote?.vote != null) {
+                    selectedVotes[candidate.candidate_id] = true
+                    android.util.Log.d(
+                        "PollingScreen",
+                        "Auto-marking ${candidate.name} as selected (value: ${vote.vote})"
+                    )
+                } else {
+                    allVotesHaveValues = false
+                    android.util.Log.d(
+                        "PollingScreen",
+                        "Cannot auto-mark ${candidate.name} as it has no vote value"
+                    )
+                }
+            }
+
+            // Trigger UI update if needed
+            if (allVotesHaveValues) {
+                android.util.Log.d(
+                    "PollingScreen",
+                    "All votes have values, button should be enabled"
+                )
+                voteUpdateCounter++
+            }
+        }
     }
 
     // Track button state and success message
@@ -308,11 +400,6 @@ private fun ActivePollingContent(
     // Convert map back to list for submission
     fun getVotesList(): List<CandidateVote> {
         return votes.values.toList()
-    }
-
-    // Check if votes have already been submitted (at least one vote has pn_created_at set)
-    val hasSubmittedVotes = candidateVotes.any {
-        it.pollingNotesId > 0
     }
 
     var showDialog by remember { mutableStateOf(false) }
@@ -477,8 +564,15 @@ private fun ActivePollingContent(
                         items(candidates) { candidate ->
                             val candidateVote = votes[candidate.candidate_id] ?: CandidateVote(
                                 candidateId = candidate.candidate_id,
-                                candidateName = candidate.name
+                                candidateName = candidate.name,
+                                // Ensure vote is initially null
+                                vote = null
                             ).also { votes[candidate.candidate_id] = it }
+
+                            android.util.Log.d(
+                                "PollingScreen",
+                                "Row for ${candidate.name}: vote=${candidateVote.vote}"
+                            )
 
                             CandidateVoteRow(
                                 candidate = candidate,
@@ -486,6 +580,15 @@ private fun ActivePollingContent(
                                 onVoteChange = { vote ->
                                     candidateVote.vote = vote
                                     votes[candidate.candidate_id] = candidateVote
+                                    // Mark this vote as explicitly selected by the user
+                                    selectedVotes[candidate.candidate_id] = true
+                                    // Log the updated vote and selection state
+                                    android.util.Log.d(
+                                        "PollingScreen",
+                                        "Vote updated: candidate=${candidate.name}, vote=$vote, explicitly selected=${selectedVotes[candidate.candidate_id]}"
+                                    )
+                                    // Increment counter to trigger recomposition
+                                    voteUpdateCounter++
                                 },
                                 onNoteChange = { note ->
                                     candidateVote.note = note
@@ -498,7 +601,8 @@ private fun ActivePollingContent(
                                 onCandidateNameClick = {
                                     selectedCandidate = candidate
                                     showDialog = true
-                                }
+                                },
+                                selectedVotes = selectedVotes
                             )
                         }
                     }
@@ -597,8 +701,66 @@ private fun ActivePollingContent(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    // Check if all candidates have votes
-                    val allCandidatesHaveVotes = votes.values.none { it.vote == null }
+                    // Check if all candidates have votes - depends on voteUpdateCounter to trigger recomposition
+                    val allCandidatesHaveVotes by remember(voteUpdateCounter, hasSubmittedVotes) {
+                        derivedStateOf {
+                            // If these are already submitted votes, check that all votes have actual values
+                            if (hasSubmittedVotes) {
+                                // Check only that every vote has a non-null value
+                                val result = candidates.isNotEmpty() &&
+                                        votes.size == candidates.size &&
+                                        votes.values.none { it.vote == null }
+
+                                android.util.Log.d(
+                                    "PollingScreen",
+                                    "Submitted votes check: all candidates have non-null vote values? $result"
+                                )
+
+                                return@derivedStateOf result
+                            }
+
+                            // For new votes or normal updates, run the full check
+                            // For debugging
+                            val nullVotes = votes.values.filter { it.vote == null }
+                            val unselectedVotes = selectedVotes.filter { !it.value }
+                            android.util.Log.d(
+                                "PollingScreen",
+                                "Votes with null value: ${nullVotes.size} out of ${votes.size}"
+                            )
+                            android.util.Log.d(
+                                "PollingScreen",
+                                "Unselected votes: ${unselectedVotes.size} out of ${selectedVotes.size}"
+                            )
+
+                            // Log each candidate's selection state
+                            candidates.forEach { candidate ->
+                                val isSelected = selectedVotes[candidate.candidate_id] ?: false
+                                val voteValue = votes[candidate.candidate_id]?.vote
+                                android.util.Log.d(
+                                    "PollingScreen",
+                                    "Candidate ${candidate.name}: explicitly selected=$isSelected, vote=$voteValue"
+                                )
+                            }
+
+                            // Check that:
+                            // 1. There are candidates to vote on
+                            // 2. All candidates have entries in the selectedVotes map
+                            // 3. All votes have been explicitly selected (selectedVotes value is true)
+                            // 4. No votes are null
+                            val result = candidates.isNotEmpty() &&
+                                    selectedVotes.size == candidates.size &&
+                                    selectedVotes.values.all { it } &&
+                                    votes.values.none { it.vote == null }
+
+                            // Log the final result
+                            android.util.Log.d(
+                                "PollingScreen",
+                                "All candidates have votes: $result"
+                            )
+
+                            result
+                        }
+                    }
 
                     // Save Draft button
                     if (!hasSubmittedVotes) {
@@ -628,7 +790,13 @@ private fun ActivePollingContent(
                         }
                     }
 
-                    // Submit Polling Vote button
+                    // Submit Polling Vote button - exact name and action will vary based on state
+                    val buttonText =
+                        if (hasSubmittedVotes) "Update Your Submitted Polling Vote" else "Submit Polling Vote"
+
+                    // Button is only enabled if user has explicitly selected a vote for each candidate
+                    val buttonEnabled = !isSubmitting && allCandidatesHaveVotes
+
                     Button(
                         onClick = {
                             isSubmitting = true
@@ -639,9 +807,9 @@ private fun ActivePollingContent(
                                 showSuccessMessage = true
                             }
                         },
-                        enabled = !isSubmitting && allCandidatesHaveVotes,
+                        enabled = buttonEnabled,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSubmitting || !allCandidatesHaveVotes) Color.Gray else LinkBlue
+                            containerColor = if (!buttonEnabled) Color.Gray else LinkBlue
                         )
                     ) {
                         if (isSubmitting) {
@@ -651,7 +819,7 @@ private fun ActivePollingContent(
                             )
                         } else {
                             Text(
-                                if (hasSubmittedVotes) "Update Your Submitted Polling Vote" else "Submit Polling Vote",
+                                buttonText,
                                 color = BeigeLightBackground
                             )
                         }
@@ -686,7 +854,8 @@ private fun CandidateVoteRow(
     onVoteChange: (Int?) -> Unit,
     onNoteChange: (String) -> Unit,
     onPrivateChange: (Boolean) -> Unit,
-    onCandidateNameClick: () -> Unit
+    onCandidateNameClick: () -> Unit,
+    selectedVotes: MutableMap<Int, Boolean>
 ) {
     val focusManager = LocalFocusManager.current
     var note by remember { mutableStateOf(candidateVote.note) }
@@ -852,6 +1021,8 @@ private fun CandidateVoteRow(
                         DropdownMenuItem(
                             onClick = {
                                 onVoteChange(null)
+                                // When selecting the default option, mark as not explicitly selected
+                                selectedVotes[candidate.candidate_id] = false
                                 expanded = false
                             },
                             text = {
@@ -864,6 +1035,8 @@ private fun CandidateVoteRow(
                         DropdownMenuItem(
                             onClick = {
                                 onVoteChange(1)
+                                // Mark this candidate as having an explicitly selected vote
+                                selectedVotes[candidate.candidate_id] = true
                                 expanded = false
                             },
                             text = { Text("Yes", color = BeigeLightBackground) }
@@ -871,6 +1044,8 @@ private fun CandidateVoteRow(
                         DropdownMenuItem(
                             onClick = {
                                 onVoteChange(3)
+                                // Mark this candidate as having an explicitly selected vote
+                                selectedVotes[candidate.candidate_id] = true
                                 expanded = false
                             },
                             text = { Text("No", color = BeigeLightBackground) }
@@ -878,6 +1053,8 @@ private fun CandidateVoteRow(
                         DropdownMenuItem(
                             onClick = {
                                 onVoteChange(4)
+                                // Mark this candidate as having an explicitly selected vote
+                                selectedVotes[candidate.candidate_id] = true
                                 expanded = false
                             },
                             text = { Text("Abstain", color = BeigeLightBackground) }
@@ -892,6 +1069,8 @@ private fun CandidateVoteRow(
                             DropdownMenuItem(
                                 onClick = {
                                     onVoteChange(2)
+                                    // Mark this candidate as having an explicitly selected vote
+                                    selectedVotes[candidate.candidate_id] = true
                                     expanded = false
                                 },
                                 text = { Text("Wait", color = BeigeLightBackground) }
@@ -1055,6 +1234,17 @@ fun CandidateDetailOverlay(
                                             .padding(horizontal = 16.dp, vertical = 8.dp)
                                     ) {
                                         Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Show "PRIVATE RESPONSE" text if the note is marked as private
+                                            if (note.isPrivate) {
+                                                Text(
+                                                    text = "--PRIVATE RESPONSE--",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Red,
+                                                    modifier = Modifier.padding(bottom = 4.dp)
+                                                )
+                                            }
+
                                             // Note text if available
                                             if (!note.note.isNullOrBlank()) {
                                                 Text(
@@ -1133,6 +1323,17 @@ fun CandidateDetailOverlay(
                                     Column(
                                         modifier = Modifier.weight(1f)
                                     ) {
+                                        // Show "PRIVATE RESPONSE" text if the note is marked as private
+                                        if (note.isPrivate) {
+                                            Text(
+                                                text = "--PRIVATE RESPONSE--",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Red,
+                                                modifier = Modifier.padding(bottom = 4.dp)
+                                            )
+                                        }
+
                                         Text(
                                             text = "\"${note.note}\"",
                                             style = MaterialTheme.typography.bodyMedium,

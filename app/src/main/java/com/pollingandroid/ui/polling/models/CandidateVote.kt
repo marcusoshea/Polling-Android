@@ -6,5 +6,6 @@ data class CandidateVote(
     var note: String = "",
     var vote: Int? = null,
     var isPrivate: Boolean = false,
-    var pollingNotesId: Int = 0
+    var pollingNotesId: Int = 0,
+    var completed: Boolean = false
 )

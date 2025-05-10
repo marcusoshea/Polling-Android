@@ -7,4 +7,7 @@ object Constants {
 
     // S3 image configuration
     const val S3_IMAGE_PREFIX = "https://s3.us-east-2.amazonaws.com/polling.aethelmearc.org/"
+
+    // Contact information
+    const val FEEDBACK_EMAIL = "marcusoshea100@protonmail.com"
 }

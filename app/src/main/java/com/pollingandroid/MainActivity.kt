@@ -1,6 +1,7 @@
 package com.pollingandroid
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -41,6 +42,7 @@ import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordHandler
 import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordScreen
 import com.pollingandroid.ui.resetpassword.ResetPasswordScreen
 import com.pollingandroid.ui.theme.Black
+import com.pollingandroid.util.Constants
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +76,13 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 Column(
                                     modifier = modifier
-                                        .clip(RoundedCornerShape(topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
+                                        .clip(
+                                            RoundedCornerShape(
+                                                topEnd = 16.dp,
+                                                bottomStart = 16.dp,
+                                                bottomEnd = 16.dp
+                                            )
+                                        )
                                         .background(color = TertiaryColor)
                                         .padding(20.dp)
                                 ) {
@@ -116,7 +124,9 @@ class MainActivity : ComponentActivity() {
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
                                     )
                                     Text(
                                         text = "Candidates",
@@ -128,7 +138,9 @@ class MainActivity : ComponentActivity() {
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
                                     )
                                     Text(
                                         text = "Report",
@@ -140,7 +152,30 @@ class MainActivity : ComponentActivity() {
                                     HorizontalDivider(
                                         color = PrimaryColor,
                                         thickness = 1.dp,
-                                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(.25f)
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
+                                    )
+                                    Text(
+                                        text = "Feedback",
+                                        modifier = Modifier.clickable {
+                                            val emailIntent = Intent(Intent.ACTION_SENDTO)
+                                            emailIntent.data =
+                                                Uri.parse("mailto:${Constants.FEEDBACK_EMAIL}")
+                                            emailIntent.putExtra(
+                                                Intent.EXTRA_SUBJECT,
+                                                "Polling App Feedback"
+                                            )
+                                            this@MainActivity.startActivity(emailIntent)
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
+                                    HorizontalDivider(
+                                        color = PrimaryColor,
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .fillMaxWidth(.25f)
                                     )
                                     val annotatedText = buildAnnotatedString {
                                         pushStringAnnotation(

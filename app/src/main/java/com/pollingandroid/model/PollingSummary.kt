@@ -10,9 +10,10 @@ data class PollingSummary(
     val pollingCandidateId: Int,
     val name: String,
     val pollingNotesId: Int,
-    val note: String,
-    val vote: Int,
+    val note: String?,
+    val vote: Int?,
     val pnCreatedAt: String,
     val pollingOrderMemberId: Int,
-    val completed: Boolean
+    val completed: Boolean,
+    val isPrivate: Boolean? = false
 )

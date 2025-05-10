@@ -2,6 +2,7 @@ package com.pollingandroid.api
 
 import com.pollingandroid.model.LoginRequest
 import com.pollingandroid.model.PollingOrder
+import com.pollingandroid.model.PollingNoteRequest
 import com.pollingandroid.model.RegistrationRequest
 import com.pollingandroid.model.ResetPassword
 import com.pollingandroid.model.ResetPasswordRequest
@@ -58,13 +59,19 @@ interface PollingApi {
 
     @POST("/pollingnote/create")
     fun createPollingNotes(
-        @Body body: List<Map<String, Any>>,
+        @Body body: List<PollingNoteRequest>,
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
     @GET("/polling/currentpolling/{orderId}")
     fun getCurrentPolling(
         @Path("orderId") orderId: Int,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
+
+    @GET("/member/all/{polling_order_id}")
+    fun getAllMembers(
+        @Path("polling_order_id") orderId: Int,
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 

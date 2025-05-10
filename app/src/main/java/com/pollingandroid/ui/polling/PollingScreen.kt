@@ -1,6 +1,7 @@
 package com.pollingandroid.ui.polling
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,6 +9,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,9 +43,12 @@ import com.pollingandroid.ui.polling.models.PollingMember
 import com.pollingandroid.ui.polling.models.CandidateVote
 import com.pollingandroid.util.UserUtils
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
@@ -63,6 +71,32 @@ import com.pollingandroid.ui.login.SecureStorage
 import com.pollingandroid.ui.theme.Black
 import com.pollingandroid.ui.theme.LinkBlue
 import com.pollingandroid.ui.theme.Red
+import com.pollingandroid.ui.candidates.CandidatesViewModel
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.layout.ContentScale
+import com.pollingandroid.ui.candidates.models.ExternalNote
+import com.pollingandroid.ui.candidates.models.PollingGroup
+import com.pollingandroid.ui.candidates.models.PollingNote
+import com.pollingandroid.ui.candidates.models.CandidateImage
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextDecoration
+import com.pollingandroid.ui.theme.SandCardBackground
+import kotlinx.coroutines.delay
 
 @Composable
 fun PollingScreen(
@@ -71,6 +105,7 @@ fun PollingScreen(
     onMenuClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val candidatesViewModel: CandidatesViewModel = viewModel()
     // Use direct values from LiveData
     val pollingOrderName = pollingViewModel.pollingOrderName.observeAsState("").value
     val pollingState = pollingViewModel.state.observeAsState(initial = PollingState.LOADING).value
@@ -114,7 +149,12 @@ fun PollingScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(
+                            top = paddingValues.calculateTopPadding(),
+                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                            bottom = 5.dp
+                        )
                         .background(color = PrimaryColor),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -161,7 +201,8 @@ fun PollingScreen(
                                             callback()
                                         }
                                     },
-                                    pollingViewModel = pollingViewModel
+                                    pollingViewModel = pollingViewModel,
+                                    candidatesViewModel = candidatesViewModel
                                 )
                             }
                         }
@@ -239,7 +280,8 @@ private fun ActivePollingContent(
     selectedMember: PollingMember?,
     onMemberSelected: (Int) -> Unit,
     onUpdateVotes: (List<CandidateVote>, Boolean, () -> Unit) -> Unit,
-    pollingViewModel: PollingViewModel
+    pollingViewModel: PollingViewModel,
+    candidatesViewModel: CandidatesViewModel
 ) {
     val context = LocalContext.current
 
@@ -273,9 +315,12 @@ private fun ActivePollingContent(
         it.pollingNotesId > 0
     }
 
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedCandidate by remember { mutableStateOf<Candidate?>(null) }
+
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
         // Polling Title and Date
@@ -324,7 +369,7 @@ private fun ActivePollingContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = selectedMember?.name ?: "Select Member",
+                            text = if (selectedMember == null) "Vote as self" else selectedMember.name,
                             style = MaterialTheme.typography.bodyLarge,
                             color = Black
                         )
@@ -341,17 +386,28 @@ private fun ActivePollingContent(
                     onDismissRequest = { expanded = false },
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
-                        .background(MaterialTheme.colorScheme.surface),
+                        .background(PrimaryColor),
                     properties = PopupProperties(focusable = true)
                 ) {
-                    // Add a message when there are no members
-                    if (orderMembers.isEmpty()) {
-                        DropdownMenuItem(
-                            onClick = { expanded = false },
-                            text = { Text("No members available", color = BeigeLightBackground) }
-                        )
-                    }
+                    // Add "Vote as self" option first
+                    DropdownMenuItem(
+                        onClick = {
+                            onMemberSelected(-1) // -1 indicates voting as self
+                            expanded = false
+                        },
+                        text = {
+                            Text(
+                                text = "Vote as self",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = BeigeLightBackground
+                            )
+                        }
+                    )
 
+                    // Add divider
+                    Divider(color = BeigeLightBackground.copy(alpha = 0.5f))
+
+                    // Add members
                     orderMembers.forEach { member ->
                         DropdownMenuItem(
                             onClick = {
@@ -373,11 +429,16 @@ private fun ActivePollingContent(
 
         // Voting Section
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 0.dp)
+                .weight(1f),
             colors = CardDefaults.cardColors(containerColor = TertiaryColor)
         ) {
             Column(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxHeight()
             ) {
                 // Add a title above the table headers
                 Text(
@@ -394,36 +455,109 @@ private fun ActivePollingContent(
                 Divider(color = Color.Gray)
 
                 // Candidate rows
-                LazyColumn(
+                val lazyListState = rememberLazyListState()
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 400.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .weight(1f, fill = true)
                 ) {
-                    items(candidates) { candidate ->
-                        val candidateVote = votes[candidate.candidate_id] ?: CandidateVote(
-                            candidateId = candidate.candidate_id,
-                            candidateName = candidate.name
-                        ).also { votes[candidate.candidate_id] = it }
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        contentPadding = PaddingValues(
+                            start = 8.dp,
+                            end = 8.dp,
+                            top = 8.dp,
+                            bottom = 5.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(candidates) { candidate ->
+                            val candidateVote = votes[candidate.candidate_id] ?: CandidateVote(
+                                candidateId = candidate.candidate_id,
+                                candidateName = candidate.name
+                            ).also { votes[candidate.candidate_id] = it }
 
-                        CandidateVoteRow(
-                            candidate = candidate,
-                            candidateVote = candidateVote,
-                            onVoteChange = { vote ->
-                                candidateVote.vote = vote
-                                votes[candidate.candidate_id] = candidateVote
-                            },
-                            onNoteChange = { note ->
-                                candidateVote.note = note
-                                votes[candidate.candidate_id] = candidateVote
-                            },
-                            onPrivateChange = { isPrivate ->
-                                candidateVote.isPrivate = isPrivate
-                                votes[candidate.candidate_id] = candidateVote
-                            }
+                            CandidateVoteRow(
+                                candidate = candidate,
+                                candidateVote = candidateVote,
+                                onVoteChange = { vote ->
+                                    candidateVote.vote = vote
+                                    votes[candidate.candidate_id] = candidateVote
+                                },
+                                onNoteChange = { note ->
+                                    candidateVote.note = note
+                                    votes[candidate.candidate_id] = candidateVote
+                                },
+                                onPrivateChange = { isPrivate ->
+                                    candidateVote.isPrivate = isPrivate
+                                    votes[candidate.candidate_id] = candidateVote
+                                },
+                                onCandidateNameClick = {
+                                    selectedCandidate = candidate
+                                    showDialog = true
+                                }
+                            )
+                        }
+                    }
+
+                    // Add scrollbar indicator at bottom
+                    // Add up/down scroll indicators when not at top/bottom
+                    if (lazyListState.canScrollBackward) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(16.dp)
+                                .align(Alignment.TopCenter)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            TertiaryColor.copy(alpha = 0.3f),
+                                            Color.Transparent
+                                        )
+                                    )
+                                )
                         )
                     }
+
+                    if (lazyListState.canScrollForward) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(16.dp)
+                                .align(Alignment.BottomCenter)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            TertiaryColor.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                )
+                        )
+
+                        // Dots to indicate scrollability
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(3) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(Gold.copy(alpha = 0.7f))
+                                        .padding(horizontal = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+
                 }
 
                 // Success message
@@ -523,6 +657,22 @@ private fun ActivePollingContent(
             }
         }
     }
+
+    if (showDialog && selectedCandidate != null) {
+        Dialog(
+            onDismissRequest = { showDialog = false },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            CandidateDetailOverlay(
+                candidate = selectedCandidate!!,
+                candidatesViewModel = candidatesViewModel,
+                onClose = { showDialog = false }
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -532,7 +682,8 @@ private fun CandidateVoteRow(
     candidateVote: CandidateVote,
     onVoteChange: (Int?) -> Unit,
     onNoteChange: (String) -> Unit,
-    onPrivateChange: (Boolean) -> Unit
+    onPrivateChange: (Boolean) -> Unit,
+    onCandidateNameClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     var note by remember { mutableStateOf(candidateVote.note) }
@@ -568,16 +719,38 @@ private fun CandidateVoteRow(
                 .padding(12.dp)
         ) {
             // Line 1: Candidate name
-            Text(
-                text = candidate.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Black,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(TertiaryColor.copy(alpha = 0.3f))
-                    .padding(8.dp)
-            )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(bounded = true, color = LinkBlue)
+                    ) {
+                        onCandidateNameClick()
+                    }
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = candidate.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Black
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "View Candidate Details",
+                        tint = LinkBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -651,7 +824,9 @@ private fun CandidateVoteRow(
                                 tint = Black
                             )
                         },
-                        modifier = Modifier.fillMaxWidth(0.9f),
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .clickable { expanded = true },
                         textStyle = TextStyle(color = Black),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Black,
@@ -668,7 +843,7 @@ private fun CandidateVoteRow(
                         onDismissRequest = { expanded = false },
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
-                            .background(MaterialTheme.colorScheme.surface),
+                            .background(PrimaryColor),
                         properties = PopupProperties(focusable = true)
                     ) {
                         DropdownMenuItem(
@@ -761,6 +936,234 @@ private fun CandidateVoteRow(
                             checkmarkColor = Color.White
                         )
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CandidateDetailOverlay(
+    candidate: Candidate,
+    candidatesViewModel: CandidatesViewModel,
+    onClose: () -> Unit
+) {
+    // Load candidate details when overlay opens
+    LaunchedEffect(candidate.candidate_id) {
+        candidatesViewModel.selectCandidate(candidate)
+    }
+
+    // Observe state from the ViewModel
+    val selectedCandidate by candidatesViewModel.selectedCandidate.observeAsState()
+    val pollingNotes by candidatesViewModel.pollingNotes.observeAsState(emptyList())
+    val externalNotes by candidatesViewModel.externalNotes.observeAsState(emptyList())
+    val pollingGroups by candidatesViewModel.pollingGroups.observeAsState(emptyList())
+    val candidateImages by candidatesViewModel.candidateImages.observeAsState(emptyList())
+    val isLoading by candidatesViewModel.isLoading.observeAsState(false)
+    val errorMessage by candidatesViewModel.errorMessage.observeAsState(null)
+    val showPollingNotes by candidatesViewModel.showPollingNotes.observeAsState(true)
+    val showExternalNotes by candidatesViewModel.showExternalNotes.observeAsState(true)
+
+    val scrollState = rememberScrollState()
+    val uriHandler = LocalUriHandler.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .heightIn(max = 600.dp),
+        colors = CardDefaults.cardColors(containerColor = SandCardBackground)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        ) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Gold)
+                }
+            } else {
+                // Candidate header
+                Text(
+                    text = candidate.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Black,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Divider(
+                    color = PrimaryColor,
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Polling Notes sections
+                pollingGroups.forEach { pollingGroup ->
+                    var expanded by remember { mutableStateOf(false) }
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = TertiaryColor.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .fillMaxWidth()
+                        ) {
+                            // Polling group header
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = !expanded }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = pollingGroup.pollingName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Black
+                                )
+
+                                Icon(
+                                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (expanded) "Collapse" else "Expand",
+                                    tint = Black
+                                )
+                            }
+
+                            // Expanded content
+                            if (expanded) {
+                                pollingGroup.notes.forEach { note ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Note text if available
+                                            if (!note.note.isNullOrBlank()) {
+                                                Text(
+                                                    text = "Note: \"${note.note}\"",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Black,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    // Member name and vote information
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp),
+
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "~ ${note.memberName}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        Text(
+                                            text = "Vote: ${note.getVoteText()}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black
+                                        )
+                                    }
+                                    Divider(
+                                        color = PrimaryColor.copy(alpha = 0.3f),
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Non-Polling Notes section
+                if (externalNotes.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = TertiaryColor.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Non-Polling Notes",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Black,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            Divider(color = PrimaryColor.copy(alpha = 0.3f))
+
+                            externalNotes.forEach { note ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "\"${note.note}\"",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black
+                                        )
+
+                                        Text(
+                                            text = "- ${note.memberName} on ${note.createdAt}",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontStyle = FontStyle.Italic,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = Black
+                                        )
+                                    }
+                                }
+                                Divider(color = PrimaryColor.copy(alpha = 0.3f))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Close button
+                Button(
+                    onClick = {
+                        candidatesViewModel.clearSelectedCandidate()
+                        onClose()
+                    },
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
+                ) {
+                    Text("Close", color = BeigeLightBackground)
                 }
             }
         }

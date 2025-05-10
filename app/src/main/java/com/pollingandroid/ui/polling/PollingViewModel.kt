@@ -91,8 +91,8 @@ class PollingViewModel : ViewModel() {
                                     val memberId = SecureStorage.retrieve("memberId") ?: "0"
                                     loadPollingSummary(polling.pollingId, memberId, authToken)
 
-                                    // Set current member as selected by default
-                                    setCurrentMemberAsSelected(memberId.toIntOrNull() ?: 0)
+                                    // Default to "Vote as self" by setting selectedMember to null
+                                    _selectedMember.postValue(null)
                                 }
 
                                 _state.postValue(PollingState.LOADED)
@@ -130,13 +130,6 @@ class PollingViewModel : ViewModel() {
                                 val responseBody = response.body()?.string() ?: "[]"
                                 val members = parseOrderMembers(responseBody)
                                 _orderMembers.postValue(members)
-
-                                // If there are members and no selected member yet, select the first one
-                                if (members.isNotEmpty() && _selectedMember.value == null) {
-                                    val currentMemberId =
-                                        SecureStorage.retrieve("memberId")?.toIntOrNull() ?: 0
-                                    setCurrentMemberAsSelected(currentMemberId)
-                                }
                             } else {
                                 _errorMessage.postValue("Failed to load order members: ${response.code()}")
                             }
@@ -153,17 +146,22 @@ class PollingViewModel : ViewModel() {
         }
     }
     
-    // Set the current member as the selected member for voting
-    private fun setCurrentMemberAsSelected(memberId: Int) {
-        viewModelScope.launch {
-            val members = _orderMembers.value ?: return@launch
-            val currentMember = members.find { it.id == memberId }
-            _selectedMember.postValue(currentMember ?: members.firstOrNull())
-        }
-    }
-    
     // Set a member as the selected member for proxy voting
     fun selectMember(memberId: Int) {
+        // Special case: -1 means "Vote as self"
+        if (memberId == -1) {
+            // Clear selected member to indicate voting as self
+            _selectedMember.postValue(null)
+
+            // Reload polling summary for logged in user
+            val authToken = UserUtils.decryptData(SecureStorage.retrieve("accessToken") ?: "") ?: ""
+            val pollingId = _currentPolling.value?.pollingId ?: 0
+            val currentUserId = SecureStorage.retrieve("memberId") ?: "0"
+            loadPollingSummary(pollingId, currentUserId, authToken)
+            return
+        }
+
+        // Normal case: select another member
         val members = _orderMembers.value ?: return
         val member = members.find { it.id == memberId }
         _selectedMember.postValue(member)
@@ -302,7 +300,11 @@ class PollingViewModel : ViewModel() {
                 
                 // Get the member ID and selected member ID
                 val currentMemberId = SecureStorage.retrieve("memberId") ?: "0"
+
+                // If _selectedMember.value is null, it means "Vote as self"
+                // Otherwise, use the selected member's ID
                 val selectedMemberId = _selectedMember.value?.id?.toString() ?: currentMemberId
+
                 val pollingId = _currentPolling.value?.pollingId ?: 0
                 val polling = _currentPolling.value
 
@@ -315,7 +317,14 @@ class PollingViewModel : ViewModel() {
                     "PollingViewModel",
                     "Preparing to update votes for polling ID: $pollingId"
                 )
-                android.util.Log.d("PollingViewModel", "Selected member ID: $selectedMemberId")
+                android.util.Log.d(
+                    "PollingViewModel",
+                    "Selected member ID: $selectedMemberId (null means voting as self)"
+                )
+                android.util.Log.d(
+                    "PollingViewModel",
+                    "Current logged-in member ID: $currentMemberId"
+                )
                 android.util.Log.d("PollingViewModel", "Number of votes to update: ${votes.size}")
                 android.util.Log.d("PollingViewModel", "Is completed submission: $isCompleted")
 

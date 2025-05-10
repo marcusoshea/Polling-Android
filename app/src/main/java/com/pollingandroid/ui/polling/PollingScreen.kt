@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -389,53 +390,16 @@ private fun ActivePollingContent(
                     color = Black
                 )
 
-                // Header Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Polling Candidate",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        color = Black
-                    )
-                    Text(
-                        text = "Your Note",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        color = Black
-                    )
-                    Text(
-                        text = "Your Vote",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(0.5f),
-                        textAlign = TextAlign.Center,
-                        color = Black
-                    )
-                    Text(
-                        text = "Private",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(0.3f),
-                        textAlign = TextAlign.Center,
-                        color = Black
-                    )
-                }
-
+                // Remove the old header row and divider since headers are now in each card
                 Divider(color = Color.Gray)
 
                 // Candidate rows
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 400.dp)
+                        .heightIn(max = 400.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(candidates) { candidate ->
                         val candidateVote = votes[candidate.candidate_id] ?: CandidateVote(
@@ -459,8 +423,6 @@ private fun ActivePollingContent(
                                 votes[candidate.candidate_id] = candidateVote
                             }
                         )
-
-                        Divider(color = Color.LightGray)
                     }
                 }
 
@@ -589,70 +551,55 @@ private fun CandidateVoteRow(
         }
     }
 
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color.LightGray)
     ) {
-        // Candidate name
-        Text(
-            text = candidate.name,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f),
-            color = Black
-        )
-
-        // Note field
-        OutlinedTextField(
-            value = note,
-            onValueChange = { note = it },
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .height(100.dp),
-            maxLines = 100,
-            enabled = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            textStyle = TextStyle(color = Black),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Black,
-                unfocusedTextColor = Black,
-                disabledTextColor = Black,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                cursorColor = Black,
-                focusedBorderColor = Color.DarkGray,
-                unfocusedBorderColor = Color.Gray
-            )
-        )
-
-        // Vote dropdown
-        var expanded by remember { mutableStateOf(false) }
-        Box(
-            modifier = Modifier
-                .weight(0.5f)
-                .padding(horizontal = 4.dp)
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
+            // Line 1: Candidate name
+            Text(
+                text = candidate.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TertiaryColor.copy(alpha = 0.3f))
+                    .padding(8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Line 2: Note field
+            Text(
+                text = "Your Note:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Black.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             OutlinedTextField(
-                value = when (candidateVote.vote) {
-                    1 -> "Yes"
-                    0, 3 -> "No"
-                    4 -> "Abstain"
-                    2 -> "Wait"
-                    else -> "Select"
-                },
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Select Vote",
-                        modifier = Modifier.clickable { expanded = true },
-                        tint = Black
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
+                value = note,
+                onValueChange = { note = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                maxLines = 5,
+                enabled = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 textStyle = TextStyle(color = Black),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Black,
@@ -660,110 +607,161 @@ private fun CandidateVoteRow(
                     disabledTextColor = Black,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    cursorColor = Black
+                    cursorColor = Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Gray
                 )
             )
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .background(MaterialTheme.colorScheme.surface),
-                properties = PopupProperties(focusable = true)
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        onVoteChange(null)
-                        expanded = false
-                    },
-                    text = {
-                        Text(
-                            "Select Your Vote",
-                            color = BeigeLightBackground
-                        )
-                    }
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onVoteChange(1)
-                        expanded = false
-                    },
-                    text = { Text("Yes", color = BeigeLightBackground) }
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onVoteChange(3)
-                        expanded = false
-                    },
-                    text = { Text("No", color = BeigeLightBackground) }
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onVoteChange(4)
-                        expanded = false
-                    },
-                    text = { Text("Abstain", color = BeigeLightBackground) }
-                )
+            Spacer(modifier = Modifier.height(12.dp))
 
-                // Get current polling order ID
-                val pollingOrderId = SecureStorage.retrieve("pollingOrder")?.toIntOrNull() ?: 0
-
-                // Only show this option if polling order is not 1 or 8
-                if (pollingOrderId != 1 && pollingOrderId != 8) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onVoteChange(2)
-                            expanded = false
-                        },
-                        text = { Text("Wait", color = BeigeLightBackground) }
-                    )
-                }
-            }
-        }
-
-        // Private checkbox
-        Box(
-            modifier = Modifier
-                .weight(0.3f)
-                .padding(horizontal = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            // Use a remembered state for checkbox
-            var isPrivate by remember { mutableStateOf(candidateVote.isPrivate) }
-
-            // Update the candidateVote when local state changes
-            LaunchedEffect(isPrivate) {
-                if (isPrivate != candidateVote.isPrivate) {
-                    onPrivateChange(isPrivate)
-                }
-            }
-
-            // Update local state when candidateVote changes
-            LaunchedEffect(candidateVote.isPrivate) {
-                if (candidateVote.isPrivate != isPrivate) {
-                    isPrivate = candidateVote.isPrivate
-                }
-            }
-
+            // Line 3: Vote dropdown and privacy checkbox
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { isPrivate = !isPrivate }
-                    .padding(4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = isPrivate,
-                    onCheckedChange = { isPrivate = it },
-                    modifier = Modifier,
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = Color.Gray,
-                        checkmarkColor = Color.White
+                // Vote dropdown
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Your Vote:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Black.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                )
+
+                    var expanded by remember { mutableStateOf(false) }
+                    OutlinedTextField(
+                        value = when (candidateVote.vote) {
+                            1 -> "Yes"
+                            0, 3 -> "No"
+                            4 -> "Abstain"
+                            2 -> "Wait"
+                            else -> "Select"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Vote",
+                                modifier = Modifier.clickable { expanded = true },
+                                tint = Black
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(0.9f),
+                        textStyle = TextStyle(color = Black),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Black,
+                            unfocusedTextColor = Black,
+                            disabledTextColor = Black,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            cursorColor = Black
+                        )
+                    )
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .background(MaterialTheme.colorScheme.surface),
+                        properties = PopupProperties(focusable = true)
+                    ) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onVoteChange(null)
+                                expanded = false
+                            },
+                            text = {
+                                Text(
+                                    "Select Your Vote",
+                                    color = BeigeLightBackground
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
+                            onClick = {
+                                onVoteChange(1)
+                                expanded = false
+                            },
+                            text = { Text("Yes", color = BeigeLightBackground) }
+                        )
+                        DropdownMenuItem(
+                            onClick = {
+                                onVoteChange(3)
+                                expanded = false
+                            },
+                            text = { Text("No", color = BeigeLightBackground) }
+                        )
+                        DropdownMenuItem(
+                            onClick = {
+                                onVoteChange(4)
+                                expanded = false
+                            },
+                            text = { Text("Abstain", color = BeigeLightBackground) }
+                        )
+
+                        // Get current polling order ID
+                        val pollingOrderId =
+                            SecureStorage.retrieve("pollingOrder")?.toIntOrNull() ?: 0
+
+                        // Only show this option if polling order is not 1 or 8
+                        if (pollingOrderId != 1 && pollingOrderId != 8) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    onVoteChange(2)
+                                    expanded = false
+                                },
+                                text = { Text("Wait", color = BeigeLightBackground) }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Privacy checkbox
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Private:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Black.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    // Use a remembered state for checkbox
+                    var isPrivate by remember { mutableStateOf(candidateVote.isPrivate) }
+
+                    // Update the candidateVote when local state changes
+                    LaunchedEffect(isPrivate) {
+                        if (isPrivate != candidateVote.isPrivate) {
+                            onPrivateChange(isPrivate)
+                        }
+                    }
+
+                    // Update local state when candidateVote changes
+                    LaunchedEffect(candidateVote.isPrivate) {
+                        if (candidateVote.isPrivate != isPrivate) {
+                            isPrivate = candidateVote.isPrivate
+                        }
+                    }
+
+                    Checkbox(
+                        checked = isPrivate,
+                        onCheckedChange = { isPrivate = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = Color.Gray,
+                            checkmarkColor = Color.White
+                        )
+                    )
+                }
             }
         }
     }

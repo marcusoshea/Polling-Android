@@ -328,48 +328,53 @@ fun CandidateDetail(
                 containerColor = SandCardBackground
             )
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.weight(0.3f)
-                ) {
-                    Text(
-                        text = "Create New Non-Polling Note",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Black
-                    )
-                }
+                // Line 1: Title
+                Text(
+                    text = "Create New Non-Polling Note",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Black,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Line 2: Textbox with 50 rows
                 OutlinedTextField(
                     value = newNoteText,
                     onValueChange = onNewNoteTextChange,
                     modifier = Modifier
-                        .weight(1.4f)
-                        .height(100.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 300.dp), // Makes room for approximately 50 rows of text
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = BeigeLightBackground,
                         focusedContainerColor = BeigeLightBackground,
                         unfocusedTextColor = Black,
                         focusedTextColor = Black
                     ),
+                    textStyle = MaterialTheme.typography.bodyMedium,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
-                    })
+                    }),
+                    maxLines = 50
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Line 3: Create button
                 Button(
                     onClick = onAddNote,
                     enabled = newNoteText.isNotBlank(),
                     modifier = Modifier
-                        .padding(start = 8.dp)
-                        .align(Alignment.Bottom),
+                        .align(Alignment.End),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E7D4B) // Green button color from screenshot
+                        containerColor = Color(0xFF2E7D4B) // Green button color
                     )
                 ) {
                     Text("Create")

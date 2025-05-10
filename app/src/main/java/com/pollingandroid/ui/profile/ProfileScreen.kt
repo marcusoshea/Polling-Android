@@ -115,7 +115,7 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(color = Gold)
+                            .background(color = TertiaryColor)
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {

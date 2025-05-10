@@ -374,10 +374,10 @@ fun CandidateDetail(
                     modifier = Modifier
                         .align(Alignment.End),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E7D4B) // Green button color
+                        containerColor = LinkBlue
                     )
                 ) {
-                    Text("Create")
+                    Text("Create", color = BeigeLightBackground)
                 }
             }
         }
@@ -832,8 +832,8 @@ fun ErrorMessage(
         Button(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Gold,
-                contentColor = Black
+                containerColor = LinkBlue,
+                contentColor = BeigeLightBackground
             )
         ) {
             Text("Retry")

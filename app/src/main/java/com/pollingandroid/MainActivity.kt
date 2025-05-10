@@ -40,6 +40,7 @@ import com.pollingandroid.ui.report.ReportScreen
 import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordHandler
 import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordScreen
 import com.pollingandroid.ui.resetpassword.ResetPasswordScreen
+import com.pollingandroid.ui.theme.Black
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,7 +147,7 @@ class MainActivity : ComponentActivity() {
                                             tag = "SignOut",
                                             annotation = "signOut"
                                         )
-                                        withStyle(style = SpanStyle(color = TertiaryColor)) {
+                                        withStyle(style = SpanStyle(color = Black)) {
                                             append("Sign Out")
                                         }
                                         pop()

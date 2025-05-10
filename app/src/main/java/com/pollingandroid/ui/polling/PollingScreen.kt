@@ -597,6 +597,9 @@ private fun ActivePollingContent(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
+                    // Check if all candidates have votes
+                    val allCandidatesHaveVotes = votes.values.none { it.vote == null }
+
                     // Save Draft button
                     if (!hasSubmittedVotes) {
                         Button(
@@ -636,9 +639,9 @@ private fun ActivePollingContent(
                                 showSuccessMessage = true
                             }
                         },
-                        enabled = !isSubmitting,
+                        enabled = !isSubmitting && allCandidatesHaveVotes,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSubmitting) Color.Gray else if (hasSubmittedVotes) Gold else Gold
+                            containerColor = if (isSubmitting || !allCandidatesHaveVotes) Color.Gray else LinkBlue
                         )
                     ) {
                         if (isSubmitting) {
@@ -649,7 +652,7 @@ private fun ActivePollingContent(
                         } else {
                             Text(
                                 if (hasSubmittedVotes) "Update Your Submitted Polling Vote" else "Submit Polling Vote",
-                                color = if (hasSubmittedVotes) BeigeLightBackground else PrimaryColor
+                                color = BeigeLightBackground
                             )
                         }
                     }
@@ -1161,7 +1164,7 @@ fun CandidateDetailOverlay(
                         onClose()
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
                 ) {
                     Text("Close", color = BeigeLightBackground)
                 }

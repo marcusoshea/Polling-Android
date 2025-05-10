@@ -1,5 +1,10 @@
 package com.pollingandroid.ui.polling
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,8 +39,10 @@ import com.pollingandroid.util.UserUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -54,6 +61,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pollingandroid.ui.login.SecureStorage
 import com.pollingandroid.ui.theme.Black
 import com.pollingandroid.ui.theme.LinkBlue
+import com.pollingandroid.ui.theme.Red
 
 @Composable
 fun PollingScreen(
@@ -139,12 +147,16 @@ fun PollingScreen(
                                     onMemberSelected = { memberId ->
                                         pollingViewModel.selectMember(memberId)
                                     },
-                                    onUpdateVotes = { updatedVotes, callback ->
+                                    onUpdateVotes = { updatedVotes, isCompleted, callback ->
                                         val encryptedToken = SecureStorage.retrieve("accessToken")
                                         val authToken =
                                             UserUtils.decryptData(encryptedToken ?: "") ?: ""
 
-                                        pollingViewModel.updateVotes(updatedVotes, authToken) {
+                                        pollingViewModel.updateVotes(
+                                            updatedVotes,
+                                            isCompleted,
+                                            authToken
+                                        ) {
                                             callback()
                                         }
                                     },
@@ -225,7 +237,7 @@ private fun ActivePollingContent(
     orderMembers: List<PollingMember>,
     selectedMember: PollingMember?,
     onMemberSelected: (Int) -> Unit,
-    onUpdateVotes: (List<CandidateVote>, () -> Unit) -> Unit,
+    onUpdateVotes: (List<CandidateVote>, Boolean, () -> Unit) -> Unit,
     pollingViewModel: PollingViewModel
 ) {
     val context = LocalContext.current
@@ -238,12 +250,14 @@ private fun ActivePollingContent(
     // Track button state and success message
     var isSubmitting by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
+    var isUpdate by remember { mutableStateOf(false) }
+    var isDraft by remember { mutableStateOf(false) }
 
     // Handle success message display
     LaunchedEffect(showSuccessMessage) {
         if (showSuccessMessage) {
             // Auto-hide success message after 3 seconds
-            kotlinx.coroutines.delay(3000)
+            kotlinx.coroutines.delay(3000L)  // Explicit long notation for clarity
             showSuccessMessage = false
         }
     }
@@ -251,6 +265,11 @@ private fun ActivePollingContent(
     // Convert map back to list for submission
     fun getVotesList(): List<CandidateVote> {
         return votes.values.toList()
+    }
+
+    // Check if votes have already been submitted (at least one vote has pn_created_at set)
+    val hasSubmittedVotes = candidateVotes.any {
+        it.pollingNotesId > 0
     }
 
     Column(
@@ -445,40 +464,99 @@ private fun ActivePollingContent(
                     }
                 }
 
-                // Submit button
-                Button(
-                    onClick = {
-                        isSubmitting = true
-                        onUpdateVotes(getVotesList()) {
-                            isSubmitting = false
-                            showSuccessMessage = true
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(16.dp),
-                    enabled = !isSubmitting,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSubmitting) Color.Gray else LinkBlue
-                    )
+                // Success message
+                AnimatedVisibility(
+                    visible = showSuccessMessage,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
                 ) {
-                    if (isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = BeigeLightBackground
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF4CAF50) // Green color for success
+                        ),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Text(
+                            text = when {
+                                isDraft -> "Draft saved successfully"
+                                isUpdate && hasSubmittedVotes -> "Submitted votes updated successfully"
+                                else -> "Votes submitted successfully"
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White,
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center
                         )
-                    } else {
-                        Text("Update Your Submitted Polling Vote", color = BeigeLightBackground)
                     }
                 }
 
-                if (showSuccessMessage) {
-                    Text(
-                        text = "Votes updated successfully",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Black,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                // Submit button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    // Save Draft button
+                    if (!hasSubmittedVotes) {
+                        Button(
+                            onClick = {
+                                isSubmitting = true
+                                isUpdate = false
+                                isDraft = true
+                                onUpdateVotes(getVotesList(), false) {
+                                    isSubmitting = false
+                                    showSuccessMessage = true
+                                }
+                            },
+                            enabled = !isSubmitting,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSubmitting) Color.Gray else LinkBlue
+                            )
+                        ) {
+                            if (isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = BeigeLightBackground
+                                )
+                            } else {
+                                Text("Save Draft", color = BeigeLightBackground)
+                            }
+                        }
+                    }
+
+                    // Submit Polling Vote button
+                    Button(
+                        onClick = {
+                            isSubmitting = true
+                            isUpdate = true
+                            isDraft = false
+                            onUpdateVotes(getVotesList(), true) {
+                                isSubmitting = false
+                                showSuccessMessage = true
+                            }
+                        },
+                        enabled = !isSubmitting,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSubmitting) Color.Gray else if (hasSubmittedVotes) Gold else Gold
+                        )
+                    ) {
+                        if (isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = BeigeLightBackground
+                            )
+                        } else {
+                            Text(
+                                if (hasSubmittedVotes) "Update Your Submitted Polling Vote" else "Submit Polling Vote",
+                                color = if (hasSubmittedVotes) BeigeLightBackground else PrimaryColor
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -532,8 +610,7 @@ private fun CandidateVoteRow(
             modifier = Modifier
                 .weight(1f)
                 .height(100.dp),
-            maxLines = 4,
-            placeholder = { Text("Enter notes here...", color = Black) },
+            maxLines = 100,
             enabled = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),

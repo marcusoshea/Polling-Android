@@ -280,7 +280,12 @@ class PollingViewModel : ViewModel() {
     }
     
     // Update votes for all candidates at once
-    fun updateVotes(votes: List<CandidateVote>, authToken: String, onSuccess: () -> Unit) {
+    fun updateVotes(
+        votes: List<CandidateVote>,
+        isCompleted: Boolean,
+        authToken: String,
+        onSuccess: () -> Unit
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Validate auth token
@@ -312,6 +317,7 @@ class PollingViewModel : ViewModel() {
                 )
                 android.util.Log.d("PollingViewModel", "Selected member ID: $selectedMemberId")
                 android.util.Log.d("PollingViewModel", "Number of votes to update: ${votes.size}")
+                android.util.Log.d("PollingViewModel", "Is completed submission: $isCompleted")
 
                 // Get the current date in the format YYYY-MM-DD
                 val currentDate = java.time.LocalDate.now().toString() + "T00:00:00.000Z"
@@ -344,7 +350,7 @@ class PollingViewModel : ViewModel() {
                         vote = vote.vote,
                         pnCreatedAt = currentDate,
                         pollingOrderMemberId = selectedMemberId.toInt(),
-                        completed = true,
+                        completed = isCompleted,
                         isPrivate = vote.isPrivate,
                         authToken = authToken
                     )

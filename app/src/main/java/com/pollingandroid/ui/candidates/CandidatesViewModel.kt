@@ -124,6 +124,18 @@ class CandidatesViewModel : ViewModel() {
                     _pollingNotes.value = pollingNotesList
                     _externalNotes.value = externalNotesList
 
+                    // Log external notes data for debugging
+                    android.util.Log.d(
+                        "CandidateDetails",
+                        "External notes loaded: ${externalNotesList.size}"
+                    )
+                    externalNotesList.forEach { note ->
+                        android.util.Log.d(
+                            "CandidateDetails",
+                            "Note: ${note.note}, By: ${note.memberName}"
+                        )
+                    }
+
                     // Group polling notes by polling
                     _pollingGroups.value = repository.groupPollingNotesByPolling(pollingNotesList)
                 } else {

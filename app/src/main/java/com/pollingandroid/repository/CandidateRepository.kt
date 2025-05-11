@@ -257,10 +257,13 @@ class CandidateRepository {
         val notesList = mutableListOf<ExternalNote>()
 
         try {
+            Log.d("ExternalNotes", "Raw JSON: $jsonString")
             val jsonArray = JSONArray(jsonString)
+            Log.d("ExternalNotes", "JSON Array length: ${jsonArray.length()}")
 
             for (i in 0 until jsonArray.length()) {
                 val noteJson = jsonArray.getJSONObject(i)
+                Log.d("ExternalNotes", "Processing note $i: ${noteJson.toString().take(100)}...")
 
                 // Extract member name from nested object if available
                 var memberName = ""
@@ -268,6 +271,10 @@ class CandidateRepository {
                     val memberObj = noteJson.optJSONObject("polling_order_member_id")
                     if (memberObj != null) {
                         memberName = memberObj.optString("name", "")
+                    } else {
+                        // If it's not a JSON object, it might be a direct value
+                        val memberId = noteJson.optInt("polling_order_member_id", 0)
+                        Log.d("ExternalNotes", "Member ID is direct value: $memberId")
                     }
                 }
 

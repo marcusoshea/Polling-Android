@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,8 +56,10 @@ import java.time.LocalDateTime
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.pollingandroid.ui.login.SecureStorage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -320,6 +321,249 @@ fun CandidateDetail(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Polling Notes sections
+        if (showPollingNotes && pollingGroups.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = SandCardBackground
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    // Polling notes header with toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Polling Notes",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Black
+                        )
+
+                        IconButton(onClick = onTogglePollingNotes) {
+                            Icon(
+                                imageVector = if (showPollingNotes) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (showPollingNotes) "Hide Notes" else "Show Notes",
+                                tint = Black
+                            )
+                        }
+                    }
+
+                    Divider(color = PrimaryColor.copy(alpha = 0.3f))
+
+                    if (pollingGroups.isEmpty()) {
+                        Text(
+                            text = "No polling notes available",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Black,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    } else {
+                        pollingGroups.forEach { pollingGroup ->
+                            var expanded by remember { mutableStateOf(false) }
+
+                            // Polling group header
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = !expanded }
+                                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = pollingGroup.pollingName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Black
+                                )
+
+                                Icon(
+                                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (expanded) "Collapse" else "Expand",
+                                    tint = Black
+                                )
+                            }
+
+                            // Expanded content
+                            if (expanded) {
+                                pollingGroup.notes.forEach { note ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Note text if available
+                                            if (!note.note.isNullOrBlank()) {
+                                                Text(
+                                                    text = "Note: \"${note.note}\"",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Black,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    // Member name and vote information
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp),
+
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "~ ${note.memberName}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        Text(
+                                            text = "Vote: ${note.getVoteText()}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Black
+                                        )
+                                    }
+                                    Divider(
+                                        color = PrimaryColor.copy(alpha = 0.3f),
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
+                            }
+
+                            Divider(color = PrimaryColor.copy(alpha = 0.3f))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // Non-Polling Notes section
+        if (showExternalNotes) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = SandCardBackground
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    // Non-Polling Notes header with toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "External Notes (${externalNotes.size})",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Black
+                        )
+
+                        IconButton(onClick = onToggleExternalNotes) {
+                            Icon(
+                                imageVector = if (showExternalNotes) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (showExternalNotes) "Hide Notes" else "Show Notes",
+                                tint = Black
+                            )
+                        }
+                    }
+
+                    Divider(color = PrimaryColor.copy(alpha = 0.3f))
+
+                    if (externalNotes.isEmpty()) {
+                        Text(
+                            text = "No external notes available",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Black,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    } else {
+                        externalNotes.forEach { note ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "\"${note.note}\"",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Black
+                                    )
+
+                                    Text(
+                                        text = "- ${note.memberName} on ${note.createdAt}",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontStyle = FontStyle.Italic,
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Black
+                                    )
+                                }
+
+                                // Get logged in user's member id and note's member id
+                                val loggedInMemberId =
+                                    SecureStorage.retrieve("memberId")?.toIntOrNull() ?: 0
+                                val isAdmin =
+                                    SecureStorage.retrieve("isOrderAdmin")?.toBoolean() == true
+                                val canDelete = isAdmin || loggedInMemberId == note.memberId
+                                val showDebugInfo = false // Set to false for production
+
+                                // Delete button
+                                if (showDebugInfo) {
+                                    Text(
+                                        text = "Logged in: $loggedInMemberId, Note's: ${note.memberId}, Admin: $isAdmin, Can Delete: $canDelete",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+
+                                if (canDelete) {
+                                    IconButton(
+                                        onClick = { onDeleteNote(note.externalNoteId) }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Note",
+                                            tint = Color.Red
+                                        )
+                                    }
+                                }
+                            }
+                            Divider(color = PrimaryColor.copy(alpha = 0.3f))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         // Create New Non-Polling Note card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -344,13 +588,13 @@ fun CandidateDetail(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Line 2: Textbox with 50 rows
+                // Line 2: Textbox with more reasonable height
                 OutlinedTextField(
                     value = newNoteText,
                     onValueChange = onNewNoteTextChange,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 300.dp), // Makes room for approximately 50 rows of text
+                        .heightIn(min = 100.dp, max = 200.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = BeigeLightBackground,
                         focusedContainerColor = BeigeLightBackground,
@@ -362,7 +606,7 @@ fun CandidateDetail(
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                     }),
-                    maxLines = 50
+                    maxLines = 5 // Limit to a more reasonable number of lines
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -383,175 +627,6 @@ fun CandidateDetail(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Polling Notes sections
-        pollingGroups.forEach { pollingGroup ->
-            var expanded by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = SandCardBackground
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .fillMaxWidth()
-                ) {
-                    // Polling group header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { expanded = !expanded }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = pollingGroup.pollingName,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Black
-                        )
-
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (expanded) "Collapse" else "Expand",
-                            tint = Black
-                        )
-                    }
-
-                    // Expanded content
-                    if (expanded) {
-                        pollingGroup.notes.forEach { note ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            ) {
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                      // Note text if available
-                                    if (!note.note.isNullOrBlank()) {
-                                        Text(
-                                            text = "Note: \"${note.note}\"",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Black,
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            // Member name and vote information
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "~ ${note.memberName}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Black,
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                Text(
-                                    text = "Vote: ${note.getVoteText()}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Black
-                                )
-                            }
-                            Divider(
-                                color = PrimaryColor.copy(alpha = 0.3f),
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Non-Polling Notes section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = SandCardBackground
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = "Non-Polling Notes",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Divider(color = PrimaryColor.copy(alpha = 0.3f))
-
-                if (externalNotes.isEmpty()) {
-                    Text(
-                        text = "No external notes available",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Black,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                } else {
-                    externalNotes.forEach { note ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = "\"${note.note}\"",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Black
-                                )
-
-                                Text(
-                                    text = "- ${note.memberName} on ${note.createdAt}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontStyle = FontStyle.Italic,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Black
-                                )
-                            }
-
-                            // Delete button
-                            IconButton(
-                                onClick = { onDeleteNote(note.externalNoteId) }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Delete Note",
-                                    tint = Color.Red
-                                )
-                            }
-                        }
-                        Divider(color = PrimaryColor.copy(alpha = 0.3f))
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Images Section
         if (candidateImages.isNotEmpty()) {
@@ -840,3 +915,8 @@ fun ErrorMessage(
         }
     }
 }
+
+fun Modifier.visible(visible: Boolean): Modifier =
+    if (visible) this else this
+        .then(Modifier.size(0.dp))
+        .then(Modifier.padding(0.dp))

@@ -60,7 +60,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.pollingandroid.ui.login.SecureStorage
-import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -530,19 +529,11 @@ fun CandidateDetail(
                                 val isAdmin =
                                     SecureStorage.retrieve("isOrderAdmin")?.toBoolean() == true
                                 val canDelete = isAdmin || loggedInMemberId == note.memberId
-                                Log.d(
-                                    "NotePermissions",
-                                    "loggedInMemberId: $loggedInMemberId, note.memberId: ${note.memberId}, isAdmin: $isAdmin, canDelete: $canDelete"
-                                )
 
                                 // Delete button - only show for admins or note creators
                                 if (canDelete) {
                                     IconButton(
                                         onClick = {
-                                            Log.d(
-                                                "Delete Note",
-                                                "Deleting note with id: ${note.externalNoteId}"
-                                            )
                                             onDeleteNote(note.externalNoteId)
                                         }
                                     ) {

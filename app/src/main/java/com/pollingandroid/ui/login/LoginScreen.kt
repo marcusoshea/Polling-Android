@@ -1,6 +1,5 @@
 package com.pollingandroid.ui.login
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -70,16 +69,26 @@ fun LoginScreen(
             TextField(
                 value = email,
                 onValueChange = { loginViewModel.setEmail(it) },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Email", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White,
+                    cursorColor = Color.White
+                )
             )
             Spacer(modifier = Modifier.height(8.dp))
             TextField(
                 value = password,
                 onValueChange = { loginViewModel.setPassword(it) },
-                label = { Text("Password") },
+                label = { Text("Password", color = Color.White) },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White,
+                    cursorColor = Color.White
+                )
             )
             Spacer(modifier = Modifier.height(8.dp))
             Box {
@@ -144,26 +153,26 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(
                     onClick = { navController.navigate("register") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                 ) {
                     Text("Register")
                 }
                 TextButton(
                     onClick = { navController.navigate("requestresetpassword") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                 ) {
                     Text("Forgot Password")
                 }
             }
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

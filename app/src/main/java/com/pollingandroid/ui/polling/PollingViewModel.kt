@@ -207,10 +207,6 @@ class PollingViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val headers = mapOf("Authorization" to "Bearer $authToken")
-                android.util.Log.d(
-                    "PollingViewModel",
-                    "Loading polling summary - Polling ID: $pollingId, Member ID: $memberId"
-                )
 
                 RetrofitInstance.api.getPollingSummary(pollingId, memberId, headers).enqueue(
                     object : Callback<ResponseBody> {
@@ -220,26 +216,8 @@ class PollingViewModel : ViewModel() {
                         ) {
                             if (response.isSuccessful) {
                                 val responseBody = response.body()?.string() ?: "[]"
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Polling summary response: $responseBody"
-                                )
-
                                 val summaries = parsePollingSummaries(responseBody)
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Parsed ${summaries.size} polling summaries"
-                                )
-
-                                // Convert to candidate votes for UI
                                 val votes = summaries.map { summary ->
-                                    android.util.Log.d(
-                                        "PollingViewModel",
-                                        "Summary for candidate ${summary.name}: " +
-                                                "vote=${summary.vote}, note=${summary.note}, pollingNotesId=${summary.pollingNotesId}" +
-                                                ", completed=${summary.completed}"
-                                    )
-
                                     CandidateVote(
                                         candidateId = summary.candidateId,
                                         candidateName = summary.name,
@@ -254,26 +232,16 @@ class PollingViewModel : ViewModel() {
                                 _candidateVotes.postValue(votes)
                             } else {
                                 val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                                android.util.Log.e(
-                                    "PollingViewModel",
-                                    "Failed to load polling summary: ${response.code()} - $errorBody"
-                                )
                                 _errorMessage.postValue("Failed to load polling summary: ${response.code()}")
                             }
                         }
 
                         override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                            android.util.Log.e(
-                                "PollingViewModel",
-                                "Error loading polling summary",
-                                t
-                            )
                             _errorMessage.postValue("Error loading polling summary: ${t.message}")
                         }
                     }
                 )
             } catch (e: Exception) {
-                android.util.Log.e("PollingViewModel", "Exception loading polling summary", e)
                 _errorMessage.postValue("Error loading polling summary: ${e.message}")
             }
         }
@@ -290,10 +258,6 @@ class PollingViewModel : ViewModel() {
             try {
                 // Validate auth token
                 if (authToken.isBlank()) {
-                    android.util.Log.e(
-                        "PollingViewModel",
-                        "Auth token is blank, cannot update votes"
-                    )
                     _errorMessage.postValue("Authentication error: Please log in again")
                     return@launch
                 }
@@ -353,13 +317,6 @@ class PollingViewModel : ViewModel() {
                         null  // Explicitly set to null for new records
                     }
 
-                    android.util.Log.d(
-                        "PollingViewModel",
-                        "Processing vote for candidate: ${vote.candidateName}, ID: ${vote.candidateId}, " +
-                                "existing pollingNotesId: $existingPollingNotesId, final pollingNotesId: $finalPollingNotesId"
-                    )
-
-                    // Create a PollingNoteRequest object for each vote
                     PollingNoteRequest(
                         pollingId = pollingId,
                         candidateId = vote.candidateId,
@@ -382,192 +339,57 @@ class PollingViewModel : ViewModel() {
                     )
                 }
 
-                android.util.Log.d(
-                    "PollingViewModel",
-                    "Making API call to create/update polling notes"
-                )
-
-                // For debugging, log the first vote's data to inspect its structure
-                if (votesList.isNotEmpty()) {
-                    android.util.Log.d("PollingViewModel", "First vote data: ${votesList.first()}")
-
-                    // Log JSON representation
-                    try {
-                        val gson =
-                            com.google.gson.GsonBuilder().serializeNulls().setPrettyPrinting()
-                                .create()
-                        val jsonString = gson.toJson(votesList)
-                        android.util.Log.d("PollingViewModel", "JSON to be sent:")
-                        android.util.Log.d("PollingViewModel", jsonString)
-                    } catch (e: Exception) {
-                        android.util.Log.e("PollingViewModel", "Error serializing to JSON", e)
-                    }
-
-                    // Additional debug for all votes to check for invalid/empty values
-                    votesList.forEachIndexed { index, request ->
-                        android.util.Log.d("PollingViewModel", "Vote $index data:")
-                        android.util.Log.d("PollingViewModel", "- pollingId: ${request.pollingId}")
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- candidateId: ${request.candidateId}"
-                        )
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- pollingCandidateId: ${request.pollingCandidateId}"
-                        )
-                        android.util.Log.d("PollingViewModel", "- name: ${request.name}")
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- pollingOrderId: ${request.pollingOrderId}"
-                        )
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- pollingNotesId: ${request.pollingNotesId}"
-                        )
-                        android.util.Log.d("PollingViewModel", "- note: ${request.note}")
-                        android.util.Log.d("PollingViewModel", "- vote: ${request.vote}")
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- pnCreatedAt: ${request.pnCreatedAt}"
-                        )
-                        android.util.Log.d(
-                            "PollingViewModel",
-                            "- pollingOrderMemberId: ${request.pollingOrderMemberId}"
-                        )
-                        android.util.Log.d("PollingViewModel", "- completed: ${request.completed}")
-                        android.util.Log.d("PollingViewModel", "- isPrivate: ${request.isPrivate}")
-                    }
-                }
-
                 RetrofitInstance.api.createPollingNotes(votesList, headers).enqueue(
                     object : Callback<ResponseBody> {
                         override fun onResponse(
                             call: Call<ResponseBody>,
                             response: Response<ResponseBody>
                         ) {
-                            android.util.Log.d(
-                                "PollingViewModel",
-                                "API response received: ${response.code()}"
-                            )
-                            android.util.Log.d(
-                                "PollingViewModel",
-                                "Request URL: ${call.request().url}"
-                            )
-                            android.util.Log.d(
-                                "PollingViewModel",
-                                "Request Headers: ${call.request().headers}"
-                            )
-
-                            // Try to log the request body
-                            try {
-                                val copy = call.request().newBuilder().build()
-                                val buffer = okio.Buffer()
-                                copy.body?.writeTo(buffer)
-                                val requestBody = buffer.readUtf8()
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Raw request body: $requestBody"
-                                )
-                            } catch (e: Exception) {
-                                android.util.Log.e(
-                                    "PollingViewModel",
-                                    "Error logging request body",
-                                    e
-                                )
-                            }
                             if (response.isSuccessful) {
                                 val responseBody = response.body()?.string() ?: "{}"
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Votes updated successfully: $responseBody"
-                                )
-                                // Try to parse the response to get updated polling_notes_id values
-                                try {
-                                    val json = org.json.JSONObject(responseBody)
-                                    if (json.has("data")) {
-                                        val dataArray = json.getJSONArray("data")
-                                        val updatedVotes = mutableListOf<CandidateVote>()
+                                val json = org.json.JSONObject(responseBody)
+                                if (json.has("data")) {
+                                    val dataArray = json.getJSONArray("data")
+                                    val updatedVotes = mutableListOf<CandidateVote>()
 
-                                        // Process each vote in the response
-                                        for (i in 0 until dataArray.length()) {
-                                            val voteJson = dataArray.getJSONObject(i)
-                                            val candidateId = voteJson.optInt("candidate_id", 0)
-                                            val pollingNotesId =
-                                                voteJson.optInt("polling_notes_id", 0)
+                                    for (i in 0 until dataArray.length()) {
+                                        val voteJson = dataArray.getJSONObject(i)
+                                        val candidateId = voteJson.optInt("candidate_id", 0)
+                                        val pollingNotesId = voteJson.optInt("polling_notes_id", 0)
 
-                                            // Find the corresponding vote in our current list
-                                            val existingVote =
-                                                votes.find { it.candidateId == candidateId }
-                                            if (existingVote != null) {
-                                                if (pollingNotesId > 0) {
-                                                    // Update the polling_notes_id with the new value from API
-                                                    android.util.Log.d(
-                                                        "PollingViewModel",
-                                                        "Updated pollingNotesId for candidate $candidateId: $pollingNotesId (old: ${existingVote.pollingNotesId})"
-                                                    )
-
-                                                    // Create an updated copy with the new pollingNotesId
-                                                    updatedVotes.add(
-                                                        existingVote.copy(
-                                                            pollingNotesId = pollingNotesId
-                                                        )
-                                                    )
-                                                } else if (existingVote.pollingNotesId > 0) {
-                                                    // Keep the existing pollingNotesId if API didn't return one
-                                                    android.util.Log.d(
-                                                        "PollingViewModel",
-                                                        "Preserving existing pollingNotesId: ${existingVote.pollingNotesId} for candidate $candidateId"
-                                                    )
-                                                    updatedVotes.add(existingVote)
-                                                } else {
-                                                    // No existing or new ID
-                                                    updatedVotes.add(existingVote)
-                                                }
+                                        val existingVote =
+                                            votes.find { it.candidateId == candidateId }
+                                        if (existingVote != null) {
+                                            if (pollingNotesId > 0) {
+                                                updatedVotes.add(existingVote.copy(pollingNotesId = pollingNotesId))
+                                            } else if (existingVote.pollingNotesId > 0) {
+                                                updatedVotes.add(existingVote)
                                             } else {
-                                                android.util.Log.e(
-                                                    "PollingViewModel",
-                                                    "Could not find vote for candidate $candidateId"
-                                                )
+                                                updatedVotes.add(existingVote)
                                             }
-                                        }
-
-                                        if (updatedVotes.isNotEmpty()) {
-                                            // Update the UI with the new votes
-                                            _candidateVotes.postValue(updatedVotes)
+                                        } else {
                                         }
                                     }
-                                } catch (e: Exception) {
-                                    android.util.Log.e(
-                                        "PollingViewModel",
-                                        "Error parsing response for polling_notes_id values", e
-                                    )
+
+                                    if (updatedVotes.isNotEmpty()) {
+                                        _candidateVotes.postValue(updatedVotes)
+                                    }
                                 }
 
-                                // Reload the summary to refresh the UI
                                 loadPollingSummary(pollingId, selectedMemberId, authToken)
                                 onSuccess()
                             } else {
                                 val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                                android.util.Log.e(
-                                    "PollingViewModel",
-                                    "Failed to update votes: ${response.code()} - $errorBody"
-                                )
                                 _errorMessage.postValue("Failed to update votes: ${response.code()} - $errorBody")
                             }
                         }
 
                         override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                            android.util.Log.e(
-                                "PollingViewModel",
-                                "Error updating votes: ${t.message}",
-                                t
-                            )
                             _errorMessage.postValue("Error updating votes: ${t.message}")
                         }
                     }
                 )
             } catch (e: Exception) {
-                android.util.Log.e("PollingViewModel", "Exception updating votes", e)
                 _errorMessage.postValue("Error updating votes: ${e.message}")
             }
         }
@@ -609,16 +431,6 @@ class PollingViewModel : ViewModel() {
                 val finalPollingNotesId =
                     if (existingPollingNotesId > 0) existingPollingNotesId else null
 
-                // Log debug information
-                android.util.Log.d(
-                    "PollingViewModel",
-                    "submitPollingNote - candidateId: $candidateId, pollingId: $pollingId"
-                )
-                android.util.Log.d(
-                    "PollingViewModel",
-                    "submitPollingNote - Existing pollingNotesId: $existingPollingNotesId, using: $finalPollingNotesId"
-                )
-
                 // Create request object
                 val pollingNote = PollingNoteRequest(
                     pollingId = pollingId,
@@ -641,94 +453,37 @@ class PollingViewModel : ViewModel() {
 
                 val body = listOf(pollingNote)
 
-                // Log JSON representation of the request
-                try {
-                    val gson =
-                        com.google.gson.GsonBuilder().serializeNulls().setPrettyPrinting().create()
-                    val jsonString = gson.toJson(body)
-                    android.util.Log.d("PollingViewModel", "submitPollingNote - JSON to be sent:")
-                    android.util.Log.d("PollingViewModel", jsonString)
-                } catch (e: Exception) {
-                    android.util.Log.e("PollingViewModel", "Error serializing to JSON", e)
-                }
-
                 RetrofitInstance.api.createPollingNotes(body, headers).enqueue(
                     object : Callback<ResponseBody> {
                         override fun onResponse(
                             call: Call<ResponseBody>,
                             response: Response<ResponseBody>
                         ) {
-                            android.util.Log.d(
-                                "PollingViewModel",
-                                "Request Headers: ${call.request().headers}"
-                            )
-                            android.util.Log.d(
-                                "PollingViewModel",
-                                "Request Body: ${call.request().body?.toString()}"
-                            )
-
-                            // Try to log the raw request body
-                            try {
-                                val copy = call.request().newBuilder().build()
-                                val buffer = okio.Buffer()
-                                copy.body?.writeTo(buffer)
-                                val requestBody = buffer.readUtf8()
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Raw request body: $requestBody"
-                                )
-                            } catch (e: Exception) {
-                                android.util.Log.e(
-                                    "PollingViewModel",
-                                    "Error logging request body",
-                                    e
-                                )
-                            }
                             if (response.isSuccessful) {
                                 val responseBody = response.body()?.string() ?: "{}"
-                                android.util.Log.d(
-                                    "PollingViewModel",
-                                    "Polling note submitted successfully: $responseBody"
-                                )
+                                val json = org.json.JSONObject(responseBody)
+                                if (json.has("data")) {
+                                    val dataArray = json.getJSONArray("data")
+                                    if (dataArray.length() > 0) {
+                                        val voteJson = dataArray.getJSONObject(0)
+                                        val returnedPollingNotesId =
+                                            voteJson.optInt("polling_notes_id", 0)
 
-                                // Try to parse the response to get updated polling_notes_id
-                                try {
-                                    val json = org.json.JSONObject(responseBody)
-                                    if (json.has("data")) {
-                                        val dataArray = json.getJSONArray("data")
-                                        if (dataArray.length() > 0) {
-                                            val voteJson = dataArray.getJSONObject(0)
-                                            val returnedPollingNotesId =
-                                                voteJson.optInt("polling_notes_id", 0)
-
-                                            if (returnedPollingNotesId > 0) {
-                                                android.util.Log.d(
-                                                    "PollingViewModel",
-                                                    "Received new pollingNotesId: $returnedPollingNotesId for candidate $candidateId"
-                                                )
-
-                                                // Find and update the existing vote
-                                                _candidateVotes.value?.let { currentVotes ->
-                                                    val updatedVotes = currentVotes.map { vote ->
-                                                        if (vote.candidateId == candidateId) {
-                                                            vote.copy(pollingNotesId = returnedPollingNotesId)
-                                                        } else {
-                                                            vote
-                                                        }
+                                        if (returnedPollingNotesId > 0) {
+                                            _candidateVotes.value?.let { currentVotes ->
+                                                val updatedVotes = currentVotes.map { vote ->
+                                                    if (vote.candidateId == candidateId) {
+                                                        vote.copy(pollingNotesId = returnedPollingNotesId)
+                                                    } else {
+                                                        vote
                                                     }
-                                                    _candidateVotes.postValue(updatedVotes)
                                                 }
+                                                _candidateVotes.postValue(updatedVotes)
                                             }
                                         }
                                     }
-                                } catch (e: Exception) {
-                                    android.util.Log.e(
-                                        "PollingViewModel",
-                                        "Error parsing response for polling_notes_id", e
-                                    )
                                 }
 
-                                // Reload polling summary to refresh the UI
                                 loadPollingSummary(pollingId, selectedMemberId, authToken)
                                 onSuccess()
                             } else {

@@ -50,6 +50,9 @@ fun ProfileScreen(
         var currentPassword by remember { mutableStateOf("") }
         var newPassword by remember { mutableStateOf("") }
 
+        // Track submission state
+        var isSubmitting by remember { mutableStateOf(false) }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -69,27 +72,55 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(color = TertiaryColor)
+                            .background(color = PrimaryColor.copy(alpha = 0.5f))
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
+                        Text(
+                            text = "Name",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
+                        TextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Name") },
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = TextBoxBackground
+                            placeholder = { Text("Enter your name", color = Color.Gray) },
+                            colors = TextFieldDefaults.colors(
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedContainerColor = TextBoxBackground,
+                                unfocusedContainerColor = TextBoxBackground,
+                                focusedIndicatorColor = PrimaryColor,
+                                unfocusedIndicatorColor = PrimaryColor,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
+                        Text(
+                            text = "Email",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
+                        TextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("Email") },
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = TextBoxBackground
+                            placeholder = { Text("Enter your email", color = Color.Gray) },
+                            colors = TextFieldDefaults.colors(
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedContainerColor = TextBoxBackground,
+                                unfocusedContainerColor = TextBoxBackground,
+                                focusedIndicatorColor = PrimaryColor,
+                                unfocusedIndicatorColor = PrimaryColor,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -99,15 +130,23 @@ fun ProfileScreen(
                         ) {
                             Checkbox(
                                 checked = active,
-                                onCheckedChange = { active = it }
+                                onCheckedChange = { active = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = LinkBlue,
+                                    uncheckedColor = Color.Gray,
+                                    checkmarkColor = Color.White
+                                )
                             )
-                            Text("Active", color = Color.Black)
+                            Text("Active", color = Color.White)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = {
-                            profileViewModel.updateProfile(context, name, email, active)
-                        }) {
-                            Text("Update Profile")
+                        Button(
+                            onClick = {
+                                profileViewModel.updateProfile(context, name, email, active)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
+                        ) {
+                            Text("Update Profile", color = Color.White)
                         }
                     }
 
@@ -115,41 +154,111 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(color = TertiaryColor)
+                            .background(color = PrimaryColor.copy(alpha = 0.5f))
                             .padding(20.dp)
                             .fillMaxWidth(.95f)
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
+                        Text(
+                            text = "Current Password",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
+                        TextField(
                             value = currentPassword,
                             onValueChange = { currentPassword = it },
-                            label = { Text("Current Password") },
+                            placeholder = { Text("Enter current password", color = Color.Gray) },
                             visualTransformation = PasswordVisualTransformation(),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = TextBoxBackground
+                            colors = TextFieldDefaults.colors(
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedContainerColor = TextBoxBackground,
+                                unfocusedContainerColor = TextBoxBackground,
+                                focusedIndicatorColor = PrimaryColor,
+                                unfocusedIndicatorColor = PrimaryColor,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
+                        Text(
+                            text = "New Password",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        )
+                        TextField(
                             value = newPassword,
                             onValueChange = { newPassword = it },
-                            label = { Text("New Password") },
+                            placeholder = { Text("Enter new password", color = Color.Gray) },
                             visualTransformation = PasswordVisualTransformation(),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = TextBoxBackground
+                            colors = TextFieldDefaults.colors(
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedContainerColor = TextBoxBackground,
+                                unfocusedContainerColor = TextBoxBackground,
+                                focusedIndicatorColor = PrimaryColor,
+                                unfocusedIndicatorColor = PrimaryColor,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                profileViewModel.updatePassword(context, currentPassword, newPassword)
+                                // Prevent double submission
+                                if (!isSubmitting) {
+                                    isSubmitting = true
+                                    try {
+                                        profileViewModel.updatePassword(
+                                            context,
+                                            currentPassword,
+                                            newPassword
+                                        ) { success ->
+                                            isSubmitting = false
+                                            if (success) {
+                                                // Navigate safely on the main thread
+                                                android.os.Handler(android.os.Looper.getMainLooper())
+                                                    .post {
+                                                        // Clear password fields
+                                                        currentPassword = ""
+                                                        newPassword = ""
+                                                        navController.navigate("signout") {
+                                                            // Clear back stack so user can't go back
+                                                            popUpTo("home") { inclusive = true }
+                                                        }
+                                                    }
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        isSubmitting = false
+                                    }
+                                }
                             },
-                            enabled = currentPassword.length >= 6 && newPassword.length >= 6,
+                            enabled = !isSubmitting && currentPassword.length >= 6 && newPassword.length >= 6,
                             colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
                         ) {
-                            Text("Change Password")
+                            if (isSubmitting) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Changing...", color = Color.White)
+                                }
+                            } else {
+                                Text("Change Password", color = Color.White)
+                            }
                         }
                     }
                 }

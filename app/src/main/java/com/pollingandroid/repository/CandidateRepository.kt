@@ -1,6 +1,5 @@
 package com.pollingandroid.repository
 
-import android.util.Log
 import com.pollingandroid.api.RetrofitInstance
 import com.pollingandroid.ui.candidates.models.Candidate
 import com.pollingandroid.ui.candidates.models.CandidateImage
@@ -32,10 +31,8 @@ class CandidateRepository {
                     emptyList()
                 }
             } catch (e: IOException) {
-                Log.e("CandidateRepository", "Network error fetching candidates", e)
                 emptyList()
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error parsing candidates", e)
                 emptyList()
             }
         }
@@ -56,10 +53,8 @@ class CandidateRepository {
                     emptyList()
                 }
             } catch (e: IOException) {
-                Log.e("CandidateRepository", "Network error fetching candidate images", e)
                 emptyList()
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error parsing candidate images", e)
                 emptyList()
             }
         }
@@ -82,7 +77,6 @@ class CandidateRepository {
                 // For now, just return success
                 true
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error toggling watchlist", e)
                 false
             }
         }
@@ -102,10 +96,8 @@ class CandidateRepository {
                     emptyList()
                 }
             } catch (e: IOException) {
-                Log.e("CandidateRepository", "Network error fetching polling notes", e)
                 emptyList()
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error parsing polling notes", e)
                 emptyList()
             }
         }
@@ -126,10 +118,8 @@ class CandidateRepository {
                     emptyList()
                 }
             } catch (e: IOException) {
-                Log.e("CandidateRepository", "Network error fetching external notes", e)
                 emptyList()
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error parsing external notes", e)
                 emptyList()
             }
         }
@@ -163,8 +153,6 @@ class CandidateRepository {
                 val response = RetrofitInstance.api.createExternalNote(body, headers).execute()
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error creating external note: ${e.message}", e)
-                Log.d("CreateNote", "Exception stack trace: ", e)
                 false
             }
         }
@@ -190,8 +178,6 @@ class CandidateRepository {
                     }
                 """.trimIndent()
 
-                Log.d("DeleteNote", "Sending request with body: $jsonBody")
-
                 // Create the request body with the correct media type
                 val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
                 val requestBody = jsonBody.toRequestBody(mediaType)
@@ -206,15 +192,8 @@ class CandidateRepository {
 
                 val response = client.newCall(request).execute()
 
-                // Log the response for debugging
-                val responseCode = response.code
-                val responseBody = response.body?.string() ?: ""
-                Log.d("DeleteNote", "Response code: $responseCode, body: $responseBody")
-
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error deleting external note: ${e.message}", e)
-                Log.d("DeleteNote", "Exception stack trace: ", e)
                 false
             }
         }
@@ -240,7 +219,7 @@ class CandidateRepository {
                 candidateList.add(candidate)
             }
         } catch (e: Exception) {
-            Log.e("CandidateRepository", "Error parsing candidate JSON", e)
+            // Error parsing candidate JSON
         }
 
         return candidateList
@@ -278,7 +257,7 @@ class CandidateRepository {
                 notesList.add(note)
             }
         } catch (e: Exception) {
-            Log.e("CandidateRepository", "Error parsing polling notes JSON", e)
+            // Error parsing polling notes JSON
         }
 
         return notesList
@@ -306,19 +285,15 @@ class CandidateRepository {
                             "polling_order_member_id",
                             0
                         ) // Fixed to use "polling_order_member_id" instead of "id"
-
-                        Log.d("ExternalNotes", "Extracted member ID: $memberId from JSON object")
                     } else if (memberValue is Int) {
                         // If it's an integer, directly use it as the member ID
                         memberId = memberValue
-                        Log.d("ExternalNotes", "Used direct integer value for member ID: $memberId")
                     } else {
                         // If it's a string, try to parse it as an integer
                         try {
                             memberId = memberValue.toString().toInt()
-                            Log.d("ExternalNotes", "Parsed member ID from string: $memberId")
                         } catch (e: NumberFormatException) {
-                            Log.e("ExternalNotes", "Failed to parse member ID from string", e)
+                            // Failed to parse member ID from string
                         }
                     }
                 }
@@ -345,7 +320,7 @@ class CandidateRepository {
                 notesList.add(note)
             }
         } catch (e: Exception) {
-            Log.e("CandidateRepository", "Error parsing external notes JSON", e)
+            // Error parsing external notes JSON
         }
 
         return notesList
@@ -372,7 +347,7 @@ class CandidateRepository {
                 imagesList.add(image)
             }
         } catch (e: Exception) {
-            Log.e("CandidateRepository", "Error parsing candidate images JSON", e)
+            // Error parsing candidate images JSON
         }
 
         return imagesList

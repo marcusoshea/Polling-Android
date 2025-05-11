@@ -287,26 +287,8 @@ private fun ActivePollingContent(
 
     // Create mutable state for votes
     val votes = remember(candidateVotes) {
-        // Log the initial votes to debug
-        android.util.Log.d("PollingScreen", "Initial candidateVotes: ${candidateVotes.size}")
-        candidateVotes.forEach { vote ->
-            android.util.Log.d(
-                "PollingScreen",
-                "CandidateID: ${vote.candidateId}, Vote: ${vote.vote}, Name: ${vote.candidateName}"
-            )
-        }
-
+        // Create a map of candidate votes indexed by candidate ID
         val voteMap = candidateVotes.associateBy { it.candidateId }.toMutableMap()
-
-        // Log the map after creation
-        android.util.Log.d("PollingScreen", "Initial vote map size: ${voteMap.size}")
-        voteMap.values.forEach { vote ->
-            android.util.Log.d(
-                "PollingScreen",
-                "Map - CandidateID: ${vote.candidateId}, Vote: ${vote.vote}, Name: ${vote.candidateName}"
-            )
-        }
-
         voteMap
     }
 
@@ -327,10 +309,7 @@ private fun ActivePollingContent(
             // If the vote is already set, mark it as explicitly selected
             if (hasRealVote) {
                 selectedVotes[candidate.candidate_id] = true
-                android.util.Log.d(
-                    "PollingScreen",
-                    "Found existing vote for ${candidate.name}: ${existingVote?.vote}, marking as selected"
-                )
+
             } else if (!selectedVotes.containsKey(candidate.candidate_id)) {
                 // Otherwise, initialize as not selected
                 selectedVotes[candidate.candidate_id] = false
@@ -350,33 +329,19 @@ private fun ActivePollingContent(
     // Special case for submitted votes - mark them all as selected without requiring UI interaction
     LaunchedEffect(hasSubmittedVotes) {
         if (hasSubmittedVotes) {
-            android.util.Log.d("PollingScreen", "Found submitted votes, marking all as selected")
-
             // Check if all votes are complete and mark them as selected
             var allVotesHaveValues = true
             candidates.forEach { candidate ->
                 val vote = votes[candidate.candidate_id]
                 if (vote?.vote != null) {
                     selectedVotes[candidate.candidate_id] = true
-                    android.util.Log.d(
-                        "PollingScreen",
-                        "Auto-marking ${candidate.name} as selected (value: ${vote.vote})"
-                    )
                 } else {
                     allVotesHaveValues = false
-                    android.util.Log.d(
-                        "PollingScreen",
-                        "Cannot auto-mark ${candidate.name} as it has no vote value"
-                    )
                 }
             }
 
             // Trigger UI update if needed
             if (allVotesHaveValues) {
-                android.util.Log.d(
-                    "PollingScreen",
-                    "All votes have values, button should be enabled"
-                )
                 voteUpdateCounter++
             }
         }
@@ -426,8 +391,10 @@ private fun ActivePollingContent(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Proxy Voting Dropdown
-        if (orderMembers.isNotEmpty()) {
+        // Proxy Voting Dropdown - only show for order admins
+        val isOrderAdmin = SecureStorage.retrieve("isOrderAdmin")?.toBoolean() == true
+
+        if (orderMembers.isNotEmpty() && isOrderAdmin) {
             var expanded by remember { mutableStateOf(false) }
 
             Text(
@@ -569,10 +536,7 @@ private fun ActivePollingContent(
                                 vote = null
                             ).also { votes[candidate.candidate_id] = it }
 
-                            android.util.Log.d(
-                                "PollingScreen",
-                                "Row for ${candidate.name}: vote=${candidateVote.vote}"
-                            )
+
 
                             CandidateVoteRow(
                                 candidate = candidate,
@@ -582,11 +546,7 @@ private fun ActivePollingContent(
                                     votes[candidate.candidate_id] = candidateVote
                                     // Mark this vote as explicitly selected by the user
                                     selectedVotes[candidate.candidate_id] = true
-                                    // Log the updated vote and selection state
-                                    android.util.Log.d(
-                                        "PollingScreen",
-                                        "Vote updated: candidate=${candidate.name}, vote=$vote, explicitly selected=${selectedVotes[candidate.candidate_id]}"
-                                    )
+
                                     // Increment counter to trigger recomposition
                                     voteUpdateCounter++
                                 },
@@ -711,54 +671,19 @@ private fun ActivePollingContent(
                                         votes.size == candidates.size &&
                                         votes.values.none { it.vote == null }
 
-                                android.util.Log.d(
-                                    "PollingScreen",
-                                    "Submitted votes check: all candidates have non-null vote values? $result"
-                                )
-
                                 return@derivedStateOf result
                             }
 
                             // For new votes or normal updates, run the full check
-                            // For debugging
-                            val nullVotes = votes.values.filter { it.vote == null }
-                            val unselectedVotes = selectedVotes.filter { !it.value }
-                            android.util.Log.d(
-                                "PollingScreen",
-                                "Votes with null value: ${nullVotes.size} out of ${votes.size}"
-                            )
-                            android.util.Log.d(
-                                "PollingScreen",
-                                "Unselected votes: ${unselectedVotes.size} out of ${selectedVotes.size}"
-                            )
-
-                            // Log each candidate's selection state
-                            candidates.forEach { candidate ->
-                                val isSelected = selectedVotes[candidate.candidate_id] ?: false
-                                val voteValue = votes[candidate.candidate_id]?.vote
-                                android.util.Log.d(
-                                    "PollingScreen",
-                                    "Candidate ${candidate.name}: explicitly selected=$isSelected, vote=$voteValue"
-                                )
-                            }
-
                             // Check that:
                             // 1. There are candidates to vote on
                             // 2. All candidates have entries in the selectedVotes map
                             // 3. All votes have been explicitly selected (selectedVotes value is true)
                             // 4. No votes are null
-                            val result = candidates.isNotEmpty() &&
+                            candidates.isNotEmpty() &&
                                     selectedVotes.size == candidates.size &&
                                     selectedVotes.values.all { it } &&
                                     votes.values.none { it.vote == null }
-
-                            // Log the final result
-                            android.util.Log.d(
-                                "PollingScreen",
-                                "All candidates have votes: $result"
-                            )
-
-                            result
                         }
                     }
 

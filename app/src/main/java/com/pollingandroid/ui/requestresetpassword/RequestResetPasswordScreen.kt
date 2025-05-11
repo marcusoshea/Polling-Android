@@ -48,7 +48,9 @@ fun RequestResetPasswordScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
+    Column(modifier = modifier
+        .fillMaxSize()
+        .background(color = PrimaryColor)) {
         TopAppBar(
             title = { Text("Request Reset Password") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -68,8 +70,13 @@ fun RequestResetPasswordScreen(
             TextField(
                 value = email,
                 onValueChange = { requestResetPasswordViewModel.setEmail(it) },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Email", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White,
+                    cursorColor = Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -130,7 +137,7 @@ fun RequestResetPasswordScreen(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Request Reset Password")
+                    Text("Request Reset Password", color = Color.White)
                 }
             }
         }

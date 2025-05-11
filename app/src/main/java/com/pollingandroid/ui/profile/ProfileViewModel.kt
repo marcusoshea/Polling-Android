@@ -34,7 +34,12 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun updatePassword(context: Context, currentPassword: String, newPassword: String) {
+    fun updatePassword(
+        context: Context,
+        currentPassword: String,
+        newPassword: String,
+        callback: (Boolean) -> Unit
+    ) {
         val member = memberInfo.value ?: return
         val accessToken = UserUtils.decryptData(SecureStorage.retrieve("accessToken").toString()) ?: return
         ProfileHandler(context).updatePassword(
@@ -43,6 +48,8 @@ class ProfileViewModel : ViewModel() {
             newPassword,
             member.pollingOrder.toString(),
             accessToken
-        ) {}
+        ) { success ->
+            callback(success)
+        }
     }
 }

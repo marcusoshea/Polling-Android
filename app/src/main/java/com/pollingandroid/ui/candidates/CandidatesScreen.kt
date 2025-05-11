@@ -60,6 +60,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.pollingandroid.ui.login.SecureStorage
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -529,23 +530,21 @@ fun CandidateDetail(
                                 val isAdmin =
                                     SecureStorage.retrieve("isOrderAdmin")?.toBoolean() == true
                                 val canDelete = isAdmin || loggedInMemberId == note.memberId
-                                val showDebugInfo = false // Set to false for production
+                                Log.d(
+                                    "NotePermissions",
+                                    "loggedInMemberId: $loggedInMemberId, note.memberId: ${note.memberId}, isAdmin: $isAdmin, canDelete: $canDelete"
+                                )
 
-                                // Delete button
-                                if (showDebugInfo) {
-                                    Text(
-                                        text = "Logged in: $loggedInMemberId, Note's: ${note.memberId}, Admin: $isAdmin, Can Delete: $canDelete",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                } else {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-
+                                // Delete button - only show for admins or note creators
                                 if (canDelete) {
                                     IconButton(
-                                        onClick = { onDeleteNote(note.externalNoteId) }
+                                        onClick = {
+                                            Log.d(
+                                                "Delete Note",
+                                                "Deleting note with id: ${note.externalNoteId}"
+                                            )
+                                            onDeleteNote(note.externalNoteId)
+                                        }
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
@@ -553,6 +552,8 @@ fun CandidateDetail(
                                             tint = Color.Red
                                         )
                                     }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
                             Divider(color = PrimaryColor.copy(alpha = 0.3f))

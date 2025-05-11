@@ -12,6 +12,10 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class CandidateRepository {
 
@@ -159,7 +163,8 @@ class CandidateRepository {
                 val response = RetrofitInstance.api.createExternalNote(body, headers).execute()
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error creating external note", e)
+                Log.e("CandidateRepository", "Error creating external note: ${e.message}", e)
+                Log.d("CreateNote", "Exception stack trace: ", e)
                 false
             }
         }
@@ -173,17 +178,43 @@ class CandidateRepository {
                 // Get the member ID from SecureStorage
                 val memberId = com.pollingandroid.ui.login.SecureStorage.retrieve("memberId") ?: "0"
 
-                // Use the format required by the API
-                val body = mapOf(
-                    "external_notes_id" to noteId.toString(),
-                    "polling_order_member_id" to memberId,
-                    "authToken" to authToken
-                )
+                // Convert string values to integers for the API
+                val memberIdInt = memberId.toIntOrNull() ?: 0
 
-                val response = RetrofitInstance.api.removeExternalNote(body, headers).execute()
+                // Create JSON in the exact format needed by the server
+                val jsonBody = """
+                    {
+                        "external_notes_id": $noteId,
+                        "polling_order_member_id": $memberIdInt,
+                        "authToken": "$authToken"
+                    }
+                """.trimIndent()
+
+                Log.d("DeleteNote", "Sending request with body: $jsonBody")
+
+                // Create the request body with the correct media type
+                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                val requestBody = jsonBody.toRequestBody(mediaType)
+
+                // Use OkHttp directly to make the request with the exact JSON format
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("https://api-polling.aethelmearc.org/externalnote/delete")
+                    .post(requestBody)
+                    .header("Authorization", "Bearer $authToken")
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                // Log the response for debugging
+                val responseCode = response.code
+                val responseBody = response.body?.string() ?: ""
+                Log.d("DeleteNote", "Response code: $responseCode, body: $responseBody")
+
                 response.isSuccessful
             } catch (e: Exception) {
-                Log.e("CandidateRepository", "Error deleting external note", e)
+                Log.e("CandidateRepository", "Error deleting external note: ${e.message}", e)
+                Log.d("DeleteNote", "Exception stack trace: ", e)
                 false
             }
         }
@@ -257,24 +288,38 @@ class CandidateRepository {
         val notesList = mutableListOf<ExternalNote>()
 
         try {
-            Log.d("ExternalNotes", "Raw JSON: $jsonString")
             val jsonArray = JSONArray(jsonString)
-            Log.d("ExternalNotes", "JSON Array length: ${jsonArray.length()}")
 
             for (i in 0 until jsonArray.length()) {
                 val noteJson = jsonArray.getJSONObject(i)
-                Log.d("ExternalNotes", "Processing note $i: ${noteJson.toString().take(100)}...")
 
                 // Extract member name from nested object if available
                 var memberName = ""
+                var memberId = 0
                 if (noteJson.has("polling_order_member_id") && !noteJson.isNull("polling_order_member_id")) {
-                    val memberObj = noteJson.optJSONObject("polling_order_member_id")
-                    if (memberObj != null) {
+                    val memberValue = noteJson.get("polling_order_member_id")
+                    if (memberValue is JSONObject) {
+                        // If it's a JSON object, extract name and id from it
+                        val memberObj = noteJson.getJSONObject("polling_order_member_id")
                         memberName = memberObj.optString("name", "")
+                        memberId = memberObj.optInt(
+                            "polling_order_member_id",
+                            0
+                        ) // Fixed to use "polling_order_member_id" instead of "id"
+
+                        Log.d("ExternalNotes", "Extracted member ID: $memberId from JSON object")
+                    } else if (memberValue is Int) {
+                        // If it's an integer, directly use it as the member ID
+                        memberId = memberValue
+                        Log.d("ExternalNotes", "Used direct integer value for member ID: $memberId")
                     } else {
-                        // If it's not a JSON object, it might be a direct value
-                        val memberId = noteJson.optInt("polling_order_member_id", 0)
-                        Log.d("ExternalNotes", "Member ID is direct value: $memberId")
+                        // If it's a string, try to parse it as an integer
+                        try {
+                            memberId = memberValue.toString().toInt()
+                            Log.d("ExternalNotes", "Parsed member ID from string: $memberId")
+                        } catch (e: NumberFormatException) {
+                            Log.e("ExternalNotes", "Failed to parse member ID from string", e)
+                        }
                     }
                 }
 
@@ -293,7 +338,7 @@ class CandidateRepository {
                     createdAt = formattedDate,
                     updatedAt = noteJson.optString("updated_at", ""),
                     memberName = memberName,
-                    memberId = noteJson.optInt("polling_order_member_id", 0),
+                    memberId = memberId,
                     isPrivate = noteJson.optBoolean("private", false)
                 )
 

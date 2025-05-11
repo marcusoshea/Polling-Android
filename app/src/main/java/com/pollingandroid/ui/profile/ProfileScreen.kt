@@ -1,5 +1,6 @@
 package com.pollingandroid.ui.profile
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.pollingandroid.ui.theme.LinkBlue
 import com.pollingandroid.ui.theme.TertiaryColor
+import com.pollingandroid.ui.login.SecureStorage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +54,17 @@ fun ProfileScreen(
 
         // Track submission state
         var isSubmitting by remember { mutableStateOf(false) }
+
+        // Helper function to sign out the user
+        fun signOut() {
+            // Clear SharedPreferences
+            val sharedPreferences =
+                context.getSharedPreferences("secure_prefs", Context.MODE_PRIVATE)
+            sharedPreferences.edit().clear().apply()
+
+            // Clear SecureStorage
+            SecureStorage.clear()
+        }
 
         Scaffold(
             topBar = {
@@ -228,7 +241,9 @@ fun ProfileScreen(
                                                         // Clear password fields
                                                         currentPassword = ""
                                                         newPassword = ""
-                                                        navController.navigate("signout") {
+                                                        // Sign out and navigate to login
+                                                        signOut()
+                                                        navController.navigate("login") {
                                                             // Clear back stack so user can't go back
                                                             popUpTo("home") { inclusive = true }
                                                         }

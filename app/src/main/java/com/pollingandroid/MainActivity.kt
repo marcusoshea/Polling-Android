@@ -143,7 +143,7 @@ class MainActivity : ComponentActivity() {
                                             .fillMaxWidth(.25f)
                                     )
                                     Text(
-                                        text = "Report",
+                                        text = "Polling Report",
                                         modifier = Modifier.clickable {
                                             navController.navigate("report")
                                             scope.launch { drawerState.close() }

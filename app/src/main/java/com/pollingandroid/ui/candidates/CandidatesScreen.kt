@@ -872,6 +872,35 @@ fun CandidateDetail(
                 }
             }
         }
+
+        // Candidate Link section - show only if link exists (moved to bottom)
+        if (!candidate.link.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Button(
+                    onClick = {
+                        try {
+                            uriHandler.openUri(candidate.link)
+                        } catch (e: Exception) {
+                            // Handle error opening URI
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(0.25f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = LinkBlue
+                    )
+                ) {
+                    Text(
+                        text = "Additional Candidate Information",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -29,11 +29,20 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.pollingandroid.ui.candidates.CandidatesScreen
 import com.pollingandroid.ui.polling.PollingScreen
@@ -62,195 +71,283 @@ class MainActivity : ComponentActivity() {
             }
             PollingAndroidTheme {
                 val navController = rememberNavController()
-                val drawerState = rememberDrawerState(DrawerValue.Closed)
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                LaunchedEffect(Unit) {
+                    drawerState.close()
+                }
                 val loginHandler = LoginHandler(this@MainActivity)
                 val registrationHandler = RegistrationHandler(this@MainActivity)
-                val modifier = Modifier
+
+                val currentRoute =
+                    navController.currentBackStackEntryAsState().value?.destination?.route
+                val showDrawer = currentRoute !in listOf(
+                    "login",
+                    "register",
+                    "requestresetpassword",
+                    "resetpassword"
+                )
+
+                val isDrawerOpen =
+                    remember { derivedStateOf { drawerState.currentValue == DrawerValue.Open } }.value
+
                 Surface(color = MaterialTheme.colorScheme.background) {
                     ModalNavigationDrawer(
                         drawerState = drawerState,
+                        scrimColor = Color.Transparent,
                         drawerContent = {
-                            Column(modifier = modifier
-                                .padding( top = 80.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(if (isDrawerOpen) 0.25f else 0f)
+
+                                    .alpha(if (isDrawerOpen) 1f else 0f)
                             ) {
-                                Column(
-                                    modifier = modifier
-                                        .clip(
-                                            RoundedCornerShape(
-                                                topEnd = 16.dp,
-                                                bottomStart = 16.dp,
-                                                bottomEnd = 16.dp
-                                            )
-                                        )
-                                        .background(color = TertiaryColor)
-                                        .padding(20.dp)
-                                ) {
-                                    Text(
-                                        text = "Home",
-                                        modifier = Modifier.clickable {
-                                            navController.navigate("home")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
+                                if (showDrawer && isDrawerOpen) {
+                                    Column(
                                         modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    Text(
-                                        text = "Profile",
-                                        modifier = Modifier.clickable {
-                                            navController.navigate("profile")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    Text(
-                                        text = "Polling",
-                                        modifier = Modifier.clickable {
-                                            navController.navigate("polling")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    Text(
-                                        text = "Candidates",
-                                        modifier = Modifier.clickable {
-                                            navController.navigate("candidates")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    Text(
-                                        text = "Polling Report",
-                                        modifier = Modifier.clickable {
-                                            navController.navigate("report")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    Text(
-                                        text = "Feedback",
-                                        modifier = Modifier.clickable {
-                                            val emailIntent = Intent(Intent.ACTION_SENDTO)
-                                            emailIntent.data =
-                                                Uri.parse("mailto:${Constants.FEEDBACK_EMAIL}")
-                                            emailIntent.putExtra(
-                                                Intent.EXTRA_SUBJECT,
-                                                "Polling App Feedback"
-                                            )
-                                            this@MainActivity.startActivity(emailIntent)
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                    HorizontalDivider(
-                                        color = PrimaryColor,
-                                        thickness = 1.dp,
-                                        modifier = Modifier
-                                            .padding(vertical = 8.dp)
-                                            .fillMaxWidth(.25f)
-                                    )
-                                    val annotatedText = buildAnnotatedString {
-                                        pushStringAnnotation(
-                                            tag = "SignOut",
-                                            annotation = "signOut"
-                                        )
-                                        withStyle(style = SpanStyle(color = Black)) {
-                                            append("Sign Out")
-                                        }
-                                        pop()
-                                    }
-                                    Text(
-                                        text = annotatedText,
-                                        modifier = Modifier.clickable {
-                                            loginHandler.signOut()
-                                            scope.launch { drawerState.close() }
-                                            navController.navigate("login") {
+                                            .padding(top = 80.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(
+                                                    RoundedCornerShape(
+                                                        topEnd = 16.dp,
+                                                        bottomStart = 16.dp,
+                                                        bottomEnd = 16.dp
+                                                    )
+                                                )
+                                                .background(color = TertiaryColor)
+                                                .padding(20.dp)
+                                        ) {
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate("home")
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Home",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate("profile")
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Profile",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate("polling")
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Polling",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate("candidates")
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Candidates",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate("report")
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Polling Report",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    val emailIntent = Intent(Intent.ACTION_SENDTO)
+                                                    emailIntent.data =
+                                                        Uri.parse("mailto:${Constants.FEEDBACK_EMAIL}")
+                                                    emailIntent.putExtra(
+                                                        Intent.EXTRA_SUBJECT,
+                                                        "Polling App Feedback"
+                                                    )
+                                                    this@MainActivity.startActivity(emailIntent)
+                                                    scope.launch { drawerState.close() }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Feedback",
+                                                    color = Black
+                                                )
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    loginHandler.signOut()
+                                                    scope.launch { drawerState.close() }
+                                                    navController.navigate("login") {
+                                                    }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(vertical = 8.dp),
+                                                border = null,
+                                                elevation = ButtonDefaults.buttonElevation(
+                                                    defaultElevation = 0.dp,
+                                                    pressedElevation = 0.dp
+                                                )
+                                            ) {
+                                                Text(
+                                                    text = "Sign Out",
+                                                    color = Black
+                                                )
                                             }
                                         }
-
-                                    )
+                                    }
                                 }
                             }
-                        }
+                        },
+                        gesturesEnabled = showDrawer
                     ) {
                         NavHost(navController = navController, startDestination = "login") {
                             composable("login") {
                                 LoginScreen(
                                     navController = navController,
                                     loginHandler = loginHandler,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { }
                                 )
                             }
                             composable("home") {
                                 HomeScreen(
                                     navController = navController,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
                                 )
                             }
                             composable("profile") {
                                 ProfileScreen(
                                     navController = navController,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
                                 )
                             }
                             composable("polling") {
                                 PollingScreen(
                                     navController = navController,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
                                 )
                             }
                             composable("candidates") {
                                 CandidatesScreen(
                                     navController = navController,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
                                 )
                             }
                             composable("report") {
                                 ReportScreen(
                                     navController = navController,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
                                 )
                             }
                             composable("register") {
                                 RegistrationScreen(
                                     navController = navController,
                                     registrationHandler = registrationHandler,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { }
                                 )
                             }
                             composable("requestresetpassword") {
                                 RequestResetPasswordScreen(
                                     navController = navController,
                                     requestResetPasswordHandler = RequestResetPasswordHandler(this@MainActivity),
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { }
                                 )
                             }
                             composable(
@@ -261,7 +358,7 @@ class MainActivity : ComponentActivity() {
                                 ResetPasswordScreen(
                                     navController = navController,
                                     token = token,
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { }
                                 )
                             }
                         }

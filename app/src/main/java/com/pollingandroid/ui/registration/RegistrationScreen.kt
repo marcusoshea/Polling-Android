@@ -16,6 +16,7 @@ import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.ui.theme.Black
+import com.pollingandroid.ui.theme.LinkBlue
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -56,7 +57,9 @@ fun RegistrationScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(color = PrimaryColor)) {
+    Column(modifier = modifier
+        .fillMaxSize()
+        .background(color = PrimaryColor)) {
         TopAppBar(
             title = { Text("Registration") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -148,13 +151,13 @@ fun RegistrationScreen(
                     }
                 },
                 enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor),
+                colors = ButtonDefaults.buttonColors(containerColor = LinkBlue),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Register")
+                    Text("Register", color = Color.White)
                 }
             }
         }

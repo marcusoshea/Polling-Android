@@ -691,12 +691,24 @@ private fun ActivePollingContent(
                     if (!hasSubmittedVotes) {
                         Button(
                             onClick = {
-                                isSubmitting = true
-                                isUpdate = false
-                                isDraft = true
-                                onUpdateVotes(getVotesList(), false) {
+                                try {
+                                    isSubmitting = true
+                                    isUpdate = false
+                                    isDraft = true
+
+                                    // Use the regular onUpdateVotes function but with isCompleted=false
+                                    onUpdateVotes(getVotesList(), false) {
+                                        isSubmitting = false
+                                        showSuccessMessage = true
+                                    }
+                                } catch (e: Exception) {
                                     isSubmitting = false
-                                    showSuccessMessage = true
+                                    // Show user-friendly error message
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Unable to save draft. Please try again.",
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             },
                             enabled = !isSubmitting,
@@ -727,9 +739,25 @@ private fun ActivePollingContent(
                             isSubmitting = true
                             isUpdate = true
                             isDraft = false
-                            onUpdateVotes(getVotesList(), true) {
+
+                            // Add try-catch around onUpdateVotes call
+                            try {
+                                onUpdateVotes(getVotesList(), true) {
+                                    try {
+                                        isSubmitting = false
+                                        showSuccessMessage = true
+                                    } catch (e: Exception) {
+                                        // Silent error handling for cleaner release
+                                    }
+                                }
+                            } catch (e: Exception) {
                                 isSubmitting = false
-                                showSuccessMessage = true
+                                // Show user-friendly error message
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Unable to submit votes. Please try again.",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
                             }
                         },
                         enabled = buttonEnabled,

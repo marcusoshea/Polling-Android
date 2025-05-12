@@ -8,8 +8,9 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryColor,
@@ -44,9 +45,23 @@ fun PollingAndroidTheme(
         else -> LightColorScheme
     }
 
+    // Detect if the device is a compact phone based on screen width
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp.dp
+
+    // Consider devices with screen width less than 360dp as "compact"
+    val isCompactDevice = screenWidthDp < 360.dp
+
+    // Use compact typography if the device is detected as compact
+    val typography = if (isCompactDevice) {
+        CompactTypography
+    } else {
+        Typography
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }

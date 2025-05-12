@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
-                                    .fillMaxWidth(if (isDrawerOpen) 0.25f else 0f)
+                                    .fillMaxWidth(if (isDrawerOpen) 0.40f else 0f)
 
                                     .alpha(if (isDrawerOpen) 1f else 0f)
                             ) {

@@ -8,11 +8,12 @@ plugins {
 }
 
 // Load keystore.properties file
-val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-}
+// val keystorePropertiesFile = rootProject.file("keystore.properties")
+// val keystoreProperties = Properties()
+// Disabled for now to fix release builds
+// if (keystorePropertiesFile.exists()) {
+//     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+// }
 
 android {
     namespace = "com.pollingandroid"
@@ -22,35 +23,56 @@ android {
         applicationId = "com.pollingandroid"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 23051506
+        versionName = "1.0.05"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+
         create("release") {
-            // Use properties from keystore.properties file
-            if (keystorePropertiesFile.exists()) {
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-            }
+            // For testing, use the debug keystore
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Apply signing config only if keystore properties exist
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            // Always use release signing config (which points to debug keystore for testing)
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isMinifyEnabled = false
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
         }
     }
 
@@ -94,7 +116,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.window:window:1.1.0")
+    implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
 
 }

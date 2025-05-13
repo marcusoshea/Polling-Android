@@ -8,12 +8,11 @@ plugins {
 }
 
 // Load keystore.properties file
-// val keystorePropertiesFile = rootProject.file("keystore.properties")
-// val keystoreProperties = Properties()
-// Disabled for now to fix release builds
-// if (keystorePropertiesFile.exists()) {
-//     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-// }
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "com.pollingandroid"
@@ -23,8 +22,8 @@ android {
         applicationId = "com.pollingandroid"
         minSdk = 28
         targetSdk = 35
-        versionCode = 23051506
-        versionName = "1.0.05"
+        versionCode = 23051525
+        versionName = "1.0.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,11 +37,10 @@ android {
         }
 
         create("release") {
-            // For testing, use the debug keystore
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
         }
     }
 

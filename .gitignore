@@ -21,3 +21,7 @@ keystore/
 *.aab
 *.keystore
 .idea/deploymentTargetSelector.xml
+.idea/deploymentTargetSelector.xml
+build_release.sh
+validate_aab.sh
+verify_keystore.sh

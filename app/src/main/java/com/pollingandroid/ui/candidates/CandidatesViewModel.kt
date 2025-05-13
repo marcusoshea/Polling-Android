@@ -56,6 +56,12 @@ class CandidatesViewModel : ViewModel() {
     private val _showExternalNotes = MutableLiveData<Boolean>(true)
     val showExternalNotes: LiveData<Boolean> = _showExternalNotes
 
+    private val _pollingNotesExpanded = MutableLiveData<Boolean>(false)
+    val pollingNotesExpanded: LiveData<Boolean> = _pollingNotesExpanded
+
+    private val _externalNotesExpanded = MutableLiveData<Boolean>(false)
+    val externalNotesExpanded: LiveData<Boolean> = _externalNotesExpanded
+
     private val _noteAddedSuccess = MutableLiveData<Boolean?>(null)
     val noteAddedSuccess: LiveData<Boolean?> = _noteAddedSuccess
 
@@ -169,11 +175,29 @@ class CandidatesViewModel : ViewModel() {
     }
 
     fun toggleShowPollingNotes() {
-        _showPollingNotes.value = !(_showPollingNotes.value ?: true)
+        val currentValue = _showPollingNotes.value ?: true
+        _showPollingNotes.value = !currentValue
+        // Preserve polling notes data when toggling visibility
+        if (!currentValue && _pollingNotes.value.isNullOrEmpty() && _selectedCandidate.value != null) {
+            loadCandidateNotes(_selectedCandidate.value!!.candidate_id)
+        }
     }
 
     fun toggleShowExternalNotes() {
-        _showExternalNotes.value = !(_showExternalNotes.value ?: true)
+        val currentValue = _showExternalNotes.value ?: true
+        _showExternalNotes.value = !currentValue
+        // Preserve external notes data when toggling visibility
+        if (!currentValue && _externalNotes.value.isNullOrEmpty() && _selectedCandidate.value != null) {
+            loadCandidateNotes(_selectedCandidate.value!!.candidate_id)
+        }
+    }
+
+    fun togglePollingNotesExpanded() {
+        _pollingNotesExpanded.value = !(_pollingNotesExpanded.value ?: false)
+    }
+
+    fun toggleExternalNotesExpanded() {
+        _externalNotesExpanded.value = !(_externalNotesExpanded.value ?: false)
     }
 
     fun addExternalNote() {

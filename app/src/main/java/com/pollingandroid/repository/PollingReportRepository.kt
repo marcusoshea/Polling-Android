@@ -232,6 +232,11 @@ class PollingReportRepository {
         val notesList = mutableListOf<Map<String, Any>>()
         try {
             val jsonArray = JSONArray(jsonString)
+
+            // Create a map to track the latest response for each member-candidate pair
+            val latestNotesByMemberCandidate = mutableMapOf<Pair<String, Int>, Map<String, Any>>()
+
+            // Process all notes and keep track of the latest one for each member-candidate pair
             for (i in 0 until jsonArray.length()) {
                 val noteJson = jsonArray.getJSONObject(i)
 
@@ -244,6 +249,30 @@ class PollingReportRepository {
                 noteMap["private"] = noteJson.optBoolean("private", false)
                 noteMap["member_name"] = noteJson.optString("member_name", "")
 
+                // Add timestamp information for sorting
+                noteMap["pn_created_at"] = noteJson.optString("pn_created_at", "")
+
+                val memberName = noteMap["member_name"] as String
+                val candidateId = noteMap["candidate_id"] as Int
+                val memberCandidatePair = Pair(memberName, candidateId)
+
+                // Get the existing note for this member-candidate pair, if any
+                val existingNote = latestNotesByMemberCandidate[memberCandidatePair]
+
+                if (existingNote == null) {
+                    // No existing note, add this one
+                    latestNotesByMemberCandidate[memberCandidatePair] = noteMap
+                } else {
+                    // Compare timestamps to keep only the latest
+                    val existingTimestamp = existingNote["pn_created_at"] as String
+                    val newTimestamp = noteMap["pn_created_at"] as String
+
+                    // If new timestamp is greater (more recent), replace the existing note
+                    if (newTimestamp > existingTimestamp) {
+                        latestNotesByMemberCandidate[memberCandidatePair] = noteMap
+                    }
+                }
+
                 val voteValue = noteMap["vote"] as? Int
                 val voteString = when (voteValue) {
                     1 -> "Yes"
@@ -253,9 +282,10 @@ class PollingReportRepository {
                     else -> ""
                 }
                 noteMap["vote"] = voteString
-
-                notesList.add(noteMap)
             }
+
+            // Add only the latest notes to the final list
+            notesList.addAll(latestNotesByMemberCandidate.values)
         } catch (e: Exception) {
         }
         return notesList

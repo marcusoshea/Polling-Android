@@ -218,7 +218,22 @@ class PollingViewModel : ViewModel() {
                             if (response.isSuccessful) {
                                 val responseBody = response.body()?.string() ?: "[]"
                                 val summaries = parsePollingSummaries(responseBody)
-                                val votes = summaries.map { summary ->
+
+                                // Create a map to store the latest vote for each candidate
+                                val latestVotesByCandidate = mutableMapOf<Int, PollingSummary>()
+
+                                // Process all summaries and keep only the latest for each candidate
+                                for (summary in summaries) {
+                                    val existing = latestVotesByCandidate[summary.candidateId]
+                                    if (existing == null || summary.pnCreatedAt > existing.pnCreatedAt) {
+                                        latestVotesByCandidate[summary.candidateId] = summary
+                                    }
+                                }
+
+                                // Convert back to a list of unique summaries
+                                val uniqueSummaries = latestVotesByCandidate.values.toList()
+
+                                val votes = uniqueSummaries.map { summary ->
                                     CandidateVote(
                                         candidateId = summary.candidateId,
                                         candidateName = summary.name,
@@ -233,7 +248,7 @@ class PollingViewModel : ViewModel() {
                                 _candidateVotes.postValue(votes)
 
                                 // Extract candidates from the polling summaries and update the candidates LiveData
-                                val candidatesFromSummary = summaries.map { summary ->
+                                val candidatesFromSummary = uniqueSummaries.map { summary ->
                                     Candidate(
                                         candidate_id = summary.candidateId,
                                         name = summary.name,
@@ -294,126 +309,137 @@ class PollingViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Removed debug logs
-
+                // First, refresh the current polling summary to get the latest data
                 try {
-                    // Get the current date in the format YYYY-MM-DD
-                    val currentDate = java.time.LocalDate.now().toString() + "T00:00:00.000Z"
+                    // Make a synchronous call to get the latest polling summary
+                    val pollingSummaryResponse = RetrofitInstance.api.getPollingSummary(
+                        pollingId,
+                        selectedMemberId,
+                        headers
+                    ).execute()
 
-                    // Create a safe list to collect valid vote requests
-                    val votesList = mutableListOf<PollingNoteRequest>()
+                    if (pollingSummaryResponse.isSuccessful) {
+                        val responseBody = pollingSummaryResponse.body()?.string() ?: "[]"
+                        val latestSummaries = parsePollingSummaries(responseBody)
 
-                    // Process each vote individually with error handling
-                    for (vote in votes) {
-                        try {
-                            // Removed debug log
-
-                            // Find candidate details from the candidates list 
-                            val candidateDetails = _candidates.value?.find {
-                                it.candidate_id == vote.candidateId
+                        // Create a map of candidate ID to latest polling notes ID
+                        val latestPollingNotesIds = latestSummaries.groupBy { it.candidateId }
+                            .mapValues { (_, summaries) ->
+                                summaries.maxByOrNull { it.pnCreatedAt }?.pollingNotesId ?: 0
                             }
 
-                            // Get existing vote to check for polling_notes_id
-                            val existingVote =
-                                _candidateVotes.value?.find { it.candidateId == vote.candidateId }
-                            val existingPollingNotesId = existingVote?.pollingNotesId ?: 0
+                        // Get the current date in the format YYYY-MM-DD
+                        val currentDate = java.time.LocalDate.now().toString() + "T00:00:00.000Z"
 
-                            // Check if we're preserving an existing ID or setting to null for new records
-                            val finalPollingNotesId = if (vote.pollingNotesId > 0) {
-                                vote.pollingNotesId
-                            } else if (existingPollingNotesId > 0) {
-                                existingPollingNotesId  // Use existing ID if available
-                            } else {
-                                null  // Explicitly set to null for new records
-                            }
+                        // Create a safe list to collect valid vote requests
+                        val votesList = mutableListOf<PollingNoteRequest>()
 
-                            // Calculate pollingCandidateId safely
-                            val safePollingCandidateId =
-                                calculatePollingCandidateIdSafely(pollingId, vote.candidateId)
+                        // Process each vote individually with error handling
+                        for (vote in votes) {
+                            try {
+                                // Find candidate details from the candidates list 
+                                val candidateDetails = _candidates.value?.find {
+                                    it.candidate_id == vote.candidateId
+                                }
 
-                            // Sanitize note - ensure null if blank
-                            val sanitizedNote = if (vote.note.isBlank()) null else vote.note
+                                // Use the latest polling notes ID from our refreshed data
+                                val latestPollingNotesId =
+                                    latestPollingNotesIds[vote.candidateId] ?: 0
 
-                            val pollingRequest = PollingNoteRequest(
-                                pollingId = pollingId,
-                                candidateId = vote.candidateId,
-                                pollingCandidateId = safePollingCandidateId,
-                                name = vote.candidateName,
-                                pollingOrderId = polling.pollingOrderId,
-                                link = candidateDetails?.link ?: "",
-                                watchList = candidateDetails?.watch_list ?: false,
-                                pollingNotesId = finalPollingNotesId,
-                                note = sanitizedNote,
-                                vote = vote.vote,
-                                pnCreatedAt = currentDate,
-                                pollingOrderMemberId = try {
-                                    selectedMemberId.toInt()
-                                } catch (e: Exception) {
-                                    0 // Default value if conversion fails
-                                },
-                                completed = isCompleted,
-                                isPrivate = vote.isPrivate,
-                                authToken = authToken
-                            )
-
-                            // Add the request to our list
-                            votesList.add(pollingRequest)
-
-                            // Removed debug log
-                        } catch (e: Exception) {
-                            // Silent error handling
-                        }
-                    }
-
-                    // If we couldn't create any valid vote requests, abort
-                    if (votesList.isEmpty()) {
-                        _errorMessage.postValue("Could not create any valid vote requests")
-                        return@launch
-                    }
-
-                    // Removed debug log
-
-                    // Make the API request
-                    RetrofitInstance.api.createPollingNotes(votesList, headers).enqueue(
-                        object : Callback<ResponseBody> {
-                            override fun onResponse(
-                                call: Call<ResponseBody>,
-                                response: Response<ResponseBody>
-                            ) {
-                                if (response.isSuccessful) {
-                                    try {
-                                        // Call onSuccess on main thread
-                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                            onSuccess()
-                                        }
-
-                                        // Reload data in the background without blocking
-                                        viewModelScope.launch(Dispatchers.IO) {
-                                            try {
-                                                loadPollingSummary(
-                                                    pollingId,
-                                                    selectedMemberId,
-                                                    authToken
-                                                )
-                                            } catch (e: Exception) {
-                                                // Silent error handling
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        // Silent error handling
-                                    }
+                                // Check if we should use the existing ID or null for new records
+                                val finalPollingNotesId = if (latestPollingNotesId > 0) {
+                                    latestPollingNotesId  // Use latest ID if available
                                 } else {
-                                    val errorBody =
-                                        response.errorBody()?.string() ?: "Unknown error"
-                                    _errorMessage.postValue("Failed to update votes: ${response.code()} - $errorBody")
+                                    null  // Explicitly set to null for new records
+                                }
+
+                                // Calculate pollingCandidateId safely
+                                val safePollingCandidateId =
+                                    calculatePollingCandidateIdSafely(pollingId, vote.candidateId)
+
+                                // Sanitize note - ensure null if blank
+                                val sanitizedNote = if (vote.note.isBlank()) null else vote.note
+
+                                val pollingRequest = PollingNoteRequest(
+                                    pollingId = pollingId,
+                                    candidateId = vote.candidateId,
+                                    pollingCandidateId = safePollingCandidateId,
+                                    name = vote.candidateName,
+                                    pollingOrderId = polling.pollingOrderId,
+                                    link = candidateDetails?.link ?: "",
+                                    watchList = candidateDetails?.watch_list ?: false,
+                                    pollingNotesId = finalPollingNotesId,
+                                    note = sanitizedNote,
+                                    vote = vote.vote,
+                                    pnCreatedAt = currentDate,
+                                    pollingOrderMemberId = try {
+                                        selectedMemberId.toInt()
+                                    } catch (e: Exception) {
+                                        0 // Default value if conversion fails
+                                    },
+                                    completed = isCompleted,
+                                    isPrivate = vote.isPrivate,
+                                    authToken = authToken
+                                )
+
+                                // Add the request to our list
+                                votesList.add(pollingRequest)
+                            } catch (e: Exception) {
+                                // Silent error handling
+                            }
+                        }
+
+                        // If we couldn't create any valid vote requests, abort
+                        if (votesList.isEmpty()) {
+                            _errorMessage.postValue("Could not create any valid vote requests")
+                            return@launch
+                        }
+
+                        // Make the API request
+                        RetrofitInstance.api.createPollingNotes(votesList, headers).enqueue(
+                            object : Callback<ResponseBody> {
+                                override fun onResponse(
+                                    call: Call<ResponseBody>,
+                                    response: Response<ResponseBody>
+                                ) {
+                                    if (response.isSuccessful) {
+                                        try {
+                                            // Call onSuccess on main thread
+                                            android.os.Handler(android.os.Looper.getMainLooper())
+                                                .post {
+                                                    onSuccess()
+                                                }
+
+                                            // Reload data in the background without blocking
+                                            viewModelScope.launch(Dispatchers.IO) {
+                                                try {
+                                                    loadPollingSummary(
+                                                        pollingId,
+                                                        selectedMemberId,
+                                                        authToken
+                                                    )
+                                                } catch (e: Exception) {
+                                                    // Silent error handling
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            // Silent error handling
+                                        }
+                                    } else {
+                                        val errorBody =
+                                            response.errorBody()?.string() ?: "Unknown error"
+                                        _errorMessage.postValue("Failed to update votes: ${response.code()} - $errorBody")
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                    _errorMessage.postValue("Error updating votes: ${t.message}")
                                 }
                             }
-
-                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                                _errorMessage.postValue("Error updating votes: ${t.message}")
-                            }
-                        }
-                    )
+                        )
+                    } else {
+                        _errorMessage.postValue("Failed to refresh polling data: ${pollingSummaryResponse.code()}")
+                    }
                 } catch (e: Exception) {
                     _errorMessage.postValue("Error updating votes: ${e.message}")
                 }
@@ -459,98 +485,110 @@ class PollingViewModel : ViewModel() {
                     val currentPollingOrderId =
                         _currentPolling.value?.pollingOrderId ?: 0
 
-                    // Get the current date in the format YYYY-MM-DD
-                    val currentDate = java.time.LocalDate.now().toString() + "T00:00:00.000Z"
+                    // First, get the latest polling data to ensure we have the most recent polling_notes_id
+                    val pollingSummaryResponse = RetrofitInstance.api.getPollingSummary(
+                        pollingId,
+                        selectedMemberId,
+                        headers
+                    ).execute()
 
-                    // Get candidate name
-                    val candidateName =
-                        _candidates.value?.find { it.candidate_id == candidateId }?.name ?: ""
+                    if (pollingSummaryResponse.isSuccessful) {
+                        val responseBody = pollingSummaryResponse.body()?.string() ?: "[]"
+                        val summaries = parsePollingSummaries(responseBody)
 
-                    // Check if there's an existing note we're updating
-                    val existingNote = _candidateVotes.value?.find { it.candidateId == candidateId }
-                    val existingPollingNotesId = existingNote?.pollingNotesId ?: 0
+                        // Find the latest polling note for this candidate
+                        val candidateNotes = summaries.filter { it.candidateId == candidateId }
+                        val latestNote = candidateNotes.maxByOrNull { it.pnCreatedAt }
+                        val latestPollingNotesId = latestNote?.pollingNotesId ?: 0
 
-                    // Use existing ID if available, otherwise null for new records
-                    val finalPollingNotesId =
-                        if (existingPollingNotesId > 0) existingPollingNotesId else null
+                        // Get the current date in the format YYYY-MM-DD
+                        val currentDate = java.time.LocalDate.now().toString() + "T00:00:00.000Z"
 
-                    // Calculate pollingCandidateId safely
-                    val safePollingCandidateId = _currentPolling.value?.pollingId?.let {
-                        calculatePollingCandidateIdSafely(it, candidateId)
-                    }
+                        // Get candidate name
+                        val candidateName =
+                            _candidates.value?.find { it.candidate_id == candidateId }?.name ?: ""
 
-                    // Sanitize the note
-                    val sanitizedNote = if (note.isEmpty()) null else note
+                        // Use the latest polling notes ID we just retrieved
+                        val finalPollingNotesId =
+                            if (latestPollingNotesId > 0) latestPollingNotesId else null
 
-                    // Removed debug logging
+                        // Calculate pollingCandidateId safely
+                        val safePollingCandidateId = _currentPolling.value?.pollingId?.let {
+                            calculatePollingCandidateIdSafely(it, candidateId)
+                        }
 
-                    // Create request object
-                    val pollingNote = PollingNoteRequest(
-                        pollingId = pollingId,
-                        candidateId = candidateId,
-                        pollingCandidateId = safePollingCandidateId,
-                        name = candidateName,
-                        pollingOrderId = currentPollingOrderId,
-                        link = _candidates.value?.find { it.candidate_id == candidateId }?.link
-                            ?: "",
-                        watchList = _candidates.value?.find { it.candidate_id == candidateId }?.watch_list
-                            ?: false,
-                        pollingNotesId = finalPollingNotesId,
-                        note = sanitizedNote,
-                        vote = vote,
-                        pnCreatedAt = currentDate,
-                        pollingOrderMemberId = try {
-                            selectedMemberId.toInt()
-                        } catch (e: Exception) {
-                            0 // Default value if conversion fails
-                        },
-                        completed = true,
-                        isPrivate = isPrivate,
-                        authToken = authToken
-                    )
+                        // Sanitize the note
+                        val sanitizedNote = if (note.isEmpty()) null else note
 
-                    val body = listOf(pollingNote)
+                        // Create request object
+                        val pollingNote = PollingNoteRequest(
+                            pollingId = pollingId,
+                            candidateId = candidateId,
+                            pollingCandidateId = safePollingCandidateId,
+                            name = candidateName,
+                            pollingOrderId = currentPollingOrderId,
+                            link = _candidates.value?.find { it.candidate_id == candidateId }?.link
+                                ?: "",
+                            watchList = _candidates.value?.find { it.candidate_id == candidateId }?.watch_list
+                                ?: false,
+                            pollingNotesId = finalPollingNotesId,
+                            note = sanitizedNote,
+                            vote = vote,
+                            pnCreatedAt = currentDate,
+                            pollingOrderMemberId = try {
+                                selectedMemberId.toInt()
+                            } catch (e: Exception) {
+                                0 // Default value if conversion fails
+                            },
+                            completed = true,
+                            isPrivate = isPrivate,
+                            authToken = authToken
+                        )
 
-                    // Removed debug logging
+                        val body = listOf(pollingNote)
 
-                    RetrofitInstance.api.createPollingNotes(body, headers).enqueue(
-                        object : Callback<ResponseBody> {
-                            override fun onResponse(
-                                call: Call<ResponseBody>,
-                                response: Response<ResponseBody>
-                            ) {
-                                if (response.isSuccessful) {
-                                    try {
-                                        // Call onSuccess from the main thread to avoid any threading issues
-                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                            onSuccess()
-                                        }
+                        RetrofitInstance.api.createPollingNotes(body, headers).enqueue(
+                            object : Callback<ResponseBody> {
+                                override fun onResponse(
+                                    call: Call<ResponseBody>,
+                                    response: Response<ResponseBody>
+                                ) {
+                                    if (response.isSuccessful) {
+                                        try {
+                                            // Call onSuccess from the main thread to avoid any threading issues
+                                            android.os.Handler(android.os.Looper.getMainLooper())
+                                                .post {
+                                                    onSuccess()
+                                                }
 
-                                        // Reload data in the background without blocking
-                                        viewModelScope.launch(Dispatchers.IO) {
-                                            try {
-                                                loadPollingSummary(
-                                                    pollingId,
-                                                    selectedMemberId,
-                                                    authToken
-                                                )
-                                            } catch (e: Exception) {
-                                                // Silent error handling
+                                            // Reload data in the background without blocking
+                                            viewModelScope.launch(Dispatchers.IO) {
+                                                try {
+                                                    loadPollingSummary(
+                                                        pollingId,
+                                                        selectedMemberId,
+                                                        authToken
+                                                    )
+                                                } catch (e: Exception) {
+                                                    // Silent error handling
+                                                }
                                             }
+                                        } catch (e: Exception) {
+                                            // Silent error handling
                                         }
-                                    } catch (e: Exception) {
-                                        // Silent error handling
+                                    } else {
+                                        _errorMessage.postValue("Failed to submit polling note: ${response.code()}")
                                     }
-                                } else {
-                                    _errorMessage.postValue("Failed to submit polling note: ${response.code()}")
+                                }
+
+                                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                    _errorMessage.postValue("Error submitting polling note: ${t.message}")
                                 }
                             }
-
-                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                                _errorMessage.postValue("Error submitting polling note: ${t.message}")
-                            }
-                        }
-                    )
+                        )
+                    } else {
+                        _errorMessage.postValue("Failed to refresh polling data: ${pollingSummaryResponse.code()}")
+                    }
                 } catch (e: Exception) {
                     _errorMessage.postValue("Error submitting polling note: ${e.message}")
                 }

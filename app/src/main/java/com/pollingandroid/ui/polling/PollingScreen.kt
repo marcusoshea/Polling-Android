@@ -1,5 +1,7 @@
 package com.pollingandroid.ui.polling
 
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -95,7 +97,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.viewinterop.AndroidView
 import com.pollingandroid.ui.theme.SandCardBackground
+import com.pollingandroid.util.Constants
 import kotlinx.coroutines.delay
 
 @Composable
@@ -1304,6 +1308,296 @@ fun CandidateDetailOverlay(
                                     }
                                 }
                                 Divider(color = PrimaryColor.copy(alpha = 0.3f))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Images Section
+                if (candidateImages.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = TertiaryColor.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth()
+                        ) {
+                            // Header text
+                            Text(
+                                text = "Candidate Images",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Black,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            candidateImages.forEach { image ->
+                                // Single card containing both image and description
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 12.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = BeigeLightBackground
+                                    ),
+                                    elevation = CardDefaults.cardElevation(2.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                        horizontalAlignment = Alignment.Start
+                                    ) {
+                                        // Image displayed using WebView
+                                        val imageUrl =
+                                            "${Constants.S3_IMAGE_PREFIX}${image.imageUrl}"
+                                        val context = LocalContext.current
+                                        var showFullScreenImage by remember { mutableStateOf(false) }
+
+                                        if (showFullScreenImage) {
+                                            Dialog(
+                                                onDismissRequest = { showFullScreenImage = false },
+                                                properties = DialogProperties(
+                                                    dismissOnBackPress = true,
+                                                    dismissOnClickOutside = true,
+                                                    usePlatformDefaultWidth = false
+                                                )
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(16.dp)
+                                                        .background(Color.Black.copy(alpha = 0.9f))
+                                                ) {
+                                                    // WebView to display the full image
+                                                    AndroidView(
+                                                        factory = { context ->
+                                                            WebView(context).apply {
+                                                                webViewClient = WebViewClient()
+                                                                settings.apply {
+                                                                    loadWithOverviewMode = true
+                                                                    useWideViewPort = true
+                                                                    builtInZoomControls = true
+                                                                    displayZoomControls = false
+                                                                }
+                                                                loadUrl(imageUrl)
+                                                            }
+                                                        },
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .padding(16.dp)
+                                                    )
+
+                                                    // Close button in top-right corner
+                                                    IconButton(
+                                                        onClick = { showFullScreenImage = false },
+                                                        modifier = Modifier
+                                                            .align(Alignment.TopEnd)
+                                                            .padding(8.dp)
+                                                            .size(48.dp)
+                                                            .background(
+                                                                color = Color.Black.copy(alpha = 0.6f),
+                                                                shape = CircleShape
+                                                            )
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Close,
+                                                            contentDescription = "Close",
+                                                            tint = Color.White,
+                                                            modifier = Modifier.size(32.dp)
+                                                        )
+                                                    }
+
+                                                    // Image filename at the bottom
+                                                    Text(
+                                                        text = image.imageUrl,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = Color.White,
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier
+                                                            .align(Alignment.BottomCenter)
+                                                            .background(
+                                                                color = Color.Black.copy(alpha = 0.6f),
+                                                                shape = RoundedCornerShape(8.dp)
+                                                            )
+                                                            .padding(
+                                                                horizontal = 16.dp,
+                                                                vertical = 8.dp
+                                                            )
+                                                            .padding(bottom = 24.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(width = 300.dp, height = 300.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .clickable { showFullScreenImage = true }
+                                            ) {
+                                                AndroidView(
+                                                    factory = { context ->
+                                                        WebView(context).apply {
+                                                            webViewClient =
+                                                                object : WebViewClient() {
+                                                                    override fun onPageFinished(
+                                                                        view: WebView?,
+                                                                        url: String?
+                                                                    ) {
+                                                                        super.onPageFinished(
+                                                                            view,
+                                                                            url
+                                                                        )
+                                                                    }
+                                                                }
+                                                            settings.apply {
+                                                                loadWithOverviewMode = true
+                                                                useWideViewPort = true
+                                                                builtInZoomControls = false
+                                                                displayZoomControls = false
+                                                            }
+                                                            loadUrl(imageUrl)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
+                                        }
+
+                                        // Image description
+                                        if (image.description.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            if (image.description.contains("<html") ||
+                                                image.description.contains("<body") ||
+                                                image.description.contains("<div") ||
+                                                image.description.contains("<p>") ||
+                                                image.description.contains("<font") ||
+                                                image.description.contains("<") && image.description.contains(
+                                                    ">"
+                                                )
+                                            ) {
+                                                var webViewHeight by remember { mutableStateOf(180.dp) }
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .heightIn(max = 180.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(TertiaryColor)
+                                                        .padding(4.dp)
+                                                ) {
+                                                    AndroidView(
+                                                        factory = { context ->
+                                                            WebView(context).apply {
+                                                                webViewClient =
+                                                                    object : WebViewClient() {
+                                                                        override fun onPageFinished(
+                                                                            view: WebView?,
+                                                                            url: String?
+                                                                        ) {
+                                                                            super.onPageFinished(
+                                                                                view,
+                                                                                url
+                                                                            )
+                                                                            view?.evaluateJavascript(
+                                                                                "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
+                                                                            ) { height ->
+                                                                                try {
+                                                                                    val contentHeight =
+                                                                                        height.toFloat()
+                                                                                            .toInt()
+                                                                                    val calculatedHeight =
+                                                                                        contentHeight / context.resources.displayMetrics.density
+                                                                                    webViewHeight =
+                                                                                        maxOf(
+                                                                                            250.dp,
+                                                                                            (calculatedHeight + 50).dp
+                                                                                        )
+                                                                                } catch (e: Exception) {
+                                                                                    webViewHeight =
+                                                                                        250.dp
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                settings.apply {
+                                                                    javaScriptEnabled = true
+                                                                    useWideViewPort = true
+                                                                    loadWithOverviewMode = true
+                                                                    setSupportZoom(true)
+                                                                    builtInZoomControls = true
+                                                                    displayZoomControls = false
+                                                                }
+                                                                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                                                loadDataWithBaseURL(
+                                                                    null,
+                                                                    buildString {
+                                                                        append("<html><head>")
+                                                                        append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes\">")
+                                                                        append("<style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style>")
+                                                                        append("</head><body>")
+                                                                        val bodyStart =
+                                                                            image.description.indexOf(
+                                                                                "<body"
+                                                                            )
+                                                                        val bodyEnd =
+                                                                            image.description.indexOf(
+                                                                                "</body>"
+                                                                            )
+                                                                        if (bodyStart >= 0 && bodyEnd >= 0) {
+                                                                            val bodyTagEnd =
+                                                                                image.description.indexOf(
+                                                                                    ">",
+                                                                                    bodyStart
+                                                                                )
+                                                                            append(
+                                                                                image.description.substring(
+                                                                                    bodyTagEnd + 1,
+                                                                                    bodyEnd
+                                                                                )
+                                                                            )
+                                                                        } else {
+                                                                            append(image.description)
+                                                                        }
+                                                                        append("</body></html>")
+                                                                    },
+                                                                    "text/html",
+                                                                    "UTF-8",
+                                                                    null
+                                                                )
+                                                            }
+                                                        },
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .verticalScroll(rememberScrollState())
+                                                    )
+                                                }
+                                            } else {
+                                                Text(
+                                                    text = image.description,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = Black,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

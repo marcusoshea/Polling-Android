@@ -163,8 +163,8 @@ fun CandidatesScreen(
                             onPrivateNoteToggle = { candidatesViewModel.toggleIsPrivateNote() },
                             onAddNote = { candidatesViewModel.addExternalNote() },
                             onDeleteNote = { candidatesViewModel.deleteExternalNote(it) },
-                            onTogglePollingNotes = { candidatesViewModel.toggleShowPollingNotes() },
-                            onToggleExternalNotes = { candidatesViewModel.toggleShowExternalNotes() },
+                            onTogglePollingNotes = { candidatesViewModel.togglePollingNotesExpanded() },
+                            onToggleExternalNotes = { candidatesViewModel.toggleExternalNotesExpanded() },
                             onToggleWatchlist = { candidatesViewModel.toggleCandidateWatchlist(it) }
                         )
                     }
@@ -392,6 +392,10 @@ fun CandidateDetail(
     val focusManager = LocalFocusManager.current
     val uriHandler = LocalUriHandler.current
 
+    // Track expanded state locally
+    var pollingNotesExpanded by remember { mutableStateOf(false) }
+    var externalNotesExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -426,10 +430,13 @@ fun CandidateDetail(
                             color = Black
                         )
 
-                        IconButton(onClick = onTogglePollingNotes) {
+                        IconButton(onClick = {
+                        pollingNotesExpanded = !pollingNotesExpanded
+                            onTogglePollingNotes()
+                        }) {
                             Icon(
-                                imageVector = if (showPollingNotes) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (showPollingNotes) "Hide Notes" else "Show Notes",
+                                imageVector = if (pollingNotesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (pollingNotesExpanded) "Hide Notes" else "Show Notes",
                                 tint = Black
                             )
                         }
@@ -444,7 +451,7 @@ fun CandidateDetail(
                             color = Black,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    } else {
+                    } else if (pollingNotesExpanded) {
                         pollingGroups.forEach { pollingGroup ->
                             var expanded by remember { mutableStateOf(false) }
 
@@ -555,10 +562,13 @@ fun CandidateDetail(
                             color = Black
                         )
 
-                        IconButton(onClick = onToggleExternalNotes) {
+                        IconButton(onClick = {
+                            externalNotesExpanded = !externalNotesExpanded
+                            onToggleExternalNotes()
+                        }) {
                             Icon(
-                                imageVector = if (showExternalNotes) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (showExternalNotes) "Hide Notes" else "Show Notes",
+                                imageVector = if (externalNotesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (externalNotesExpanded) "Hide Notes" else "Show Notes",
                                 tint = Black
                             )
                         }
@@ -573,7 +583,7 @@ fun CandidateDetail(
                             color = Black,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    } else {
+                    } else if (externalNotesExpanded) {
                         externalNotes.forEach { note ->
                             Row(
                                 modifier = Modifier

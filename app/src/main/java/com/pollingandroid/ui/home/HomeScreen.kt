@@ -24,6 +24,7 @@ import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import androidx.compose.foundation.background
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun HomeScreen(
@@ -63,8 +64,14 @@ fun HomeScreen(
                         .padding(20.dp)
                         .fillMaxWidth(.95f)
                     ) {
-                        Text(text = text, style = LocalTextStyle.current.copy(fontStyle = FontStyle.Italic))
-                }
+                        Text(
+                            text = text,
+                            style = LocalTextStyle.current.copy(
+                                fontStyle = FontStyle.Italic,
+                                color = Color.Black
+                            )
+                        )
+                    }
                 }
             }
         )

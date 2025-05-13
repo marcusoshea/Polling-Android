@@ -18,6 +18,20 @@ object PollingOrderMemberRepository {
         storePollingOrderMemberToStorage(member)
     }
 
+    fun clearData() {
+        _pollingOrderMember.postValue(
+            PollingOrderMember(
+                name = "",
+                email = "",
+                memberId = 0,
+                pollingOrder = 0,
+                active = false,
+                access_token = "",
+                isOrderAdmin = false
+            )
+        )
+    }
+
     private fun fetchPollingOrderMemberFromStorage(): PollingOrderMember {
         val name = SecureStorage.retrieve("memberName")?.let { UserUtils.decryptData(it) } ?: ""
         val email = SecureStorage.retrieve("email")?.let { UserUtils.decryptData(it) } ?: ""

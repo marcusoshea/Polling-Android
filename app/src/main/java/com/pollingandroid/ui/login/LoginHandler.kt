@@ -6,7 +6,9 @@ import com.google.gson.Gson
 import com.pollingandroid.api.RetrofitInstance
 import com.pollingandroid.model.LoginRequest
 import com.pollingandroid.model.PollingOrderMember
+import com.pollingandroid.repository.PollingOrderRepository
 import com.pollingandroid.util.UserUtils
+import com.pollingandroid.util.LiveDataCleaner
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -33,6 +35,12 @@ class LoginHandler(private val context: Context) {
                         SecureStorage.store("accessToken", encryptedAccessToken)
                         SecureStorage.store("isOrderAdmin", pollingOrderMember.isOrderAdmin.toString())
 
+                        // Update the PollingOrderRepository with the stored polling order name
+                        val storedPollingOrderName = UserUtils.getStoredPollingOrderName()
+                        if (!storedPollingOrderName.isNullOrEmpty()) {
+                            PollingOrderRepository.updatePollingOrderName(storedPollingOrderName)
+                        }
+
                         Toast.makeText(context, "Login successful: ${UserUtils.decryptData(encryptedName)}", Toast.LENGTH_SHORT).show()
                         callback(true)
                     } else {
@@ -53,7 +61,12 @@ class LoginHandler(private val context: Context) {
     }
 
     fun signOut() {
+        // First, clear all LiveData in repositories to prevent data leakage between sessions
+        LiveDataCleaner.clearAllLiveData()
+
+        // Then clear all stored credentials and user data
         SecureStorage.clear()
+
         Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
     }
 }

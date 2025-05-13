@@ -10,4 +10,12 @@ object PollingOrderRepository {
     }
 
     val pollingOrderName: LiveData<String> = _pollingOrderName
+
+    fun clearData() {
+        _pollingOrderName.postValue("")
+    }
+
+    fun updatePollingOrderName(name: String) {
+        _pollingOrderName.postValue(name)
+    }
 }

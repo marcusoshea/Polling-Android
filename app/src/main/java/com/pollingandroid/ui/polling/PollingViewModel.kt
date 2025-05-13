@@ -111,9 +111,8 @@ class PollingViewModel : ViewModel() {
                                 _currentPolling.postValue(polling)
 
                                 if (polling != null) {
-                                    // If we have an active polling, load members and candidates
+                                    // If we have an active polling, load members
                                     loadOrderMembers(pollingOrderId, authToken)
-                                    loadCandidates(pollingOrderId, authToken)
 
                                     // Also load the current member's info
                                     val memberId = SecureStorage.retrieve("memberId") ?: "0"
@@ -204,36 +203,6 @@ class PollingViewModel : ViewModel() {
         loadPollingSummary(pollingId, memberId.toString(), authToken)
     }
     
-    // Load candidates for the polling order
-    private fun loadCandidates(orderId: Int, authToken: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val headers = mapOf("Authorization" to "Bearer $authToken")
-                RetrofitInstance.api.getAllCandidates(orderId, headers).enqueue(
-                    object : Callback<ResponseBody> {
-                        override fun onResponse(
-                            call: Call<ResponseBody>,
-                            response: Response<ResponseBody>
-                        ) {
-                            if (response.isSuccessful) {
-                                val responseBody = response.body()?.string() ?: "[]"
-                                _candidates.postValue(parseCandidates(responseBody))
-                            } else {
-                                _errorMessage.postValue("Failed to load candidates: ${response.code()}")
-                            }
-                        }
-
-                        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                            _errorMessage.postValue("Error loading candidates: ${t.message}")
-                        }
-                    }
-                )
-            } catch (e: Exception) {
-                _errorMessage.postValue("Error loading candidates: ${e.message}")
-            }
-        }
-    }
-    
     // Load polling summary (votes and notes) for a specific member
     fun loadPollingSummary(pollingId: Int, memberId: String, authToken: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -262,6 +231,19 @@ class PollingViewModel : ViewModel() {
                                 }
 
                                 _candidateVotes.postValue(votes)
+
+                                // Extract candidates from the polling summaries and update the candidates LiveData
+                                val candidatesFromSummary = summaries.map { summary ->
+                                    Candidate(
+                                        candidate_id = summary.candidateId,
+                                        name = summary.name,
+                                        link = "", // We don't have link info from summary
+                                        polling_order_id = summary.pollingOrderId,
+                                        watch_list = false // We don't have watch_list info from summary
+                                    )
+                                }.distinctBy { it.candidate_id } // Remove duplicates by candidateId
+
+                                _candidates.postValue(candidatesFromSummary)
                             } else {
                                 val errorBody = response.errorBody()?.string() ?: "Unknown error"
                                 _errorMessage.postValue("Failed to load polling summary: ${response.code()}")
@@ -641,33 +623,6 @@ class PollingViewModel : ViewModel() {
         }
         
         return members
-    }
-    
-    // Parse candidates from JSON response
-    private fun parseCandidates(jsonString: String): List<Candidate> {
-        val candidates = mutableListOf<Candidate>()
-        
-        try {
-            val jsonArray = JSONArray(jsonString)
-            
-            for (i in 0 until jsonArray.length()) {
-                val candidateJson = jsonArray.getJSONObject(i)
-                
-                val candidate = Candidate(
-                    candidate_id = candidateJson.optInt("candidate_id", 0),
-                    name = candidateJson.optString("name", ""),
-                    link = candidateJson.optString("link", ""),
-                    polling_order_id = candidateJson.optInt("polling_order_id", 0),
-                    watch_list = candidateJson.optBoolean("watch_list", false)
-                )
-                
-                candidates.add(candidate)
-            }
-        } catch (e: Exception) {
-            // Handle parsing error
-        }
-        
-        return candidates
     }
     
     // Parse polling summaries from JSON response

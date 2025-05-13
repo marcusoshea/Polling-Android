@@ -108,7 +108,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Name",
-                            color = Color.White,
+                            color = Color.DarkGray,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )
@@ -132,7 +132,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(verticalSpacing))
                         Text(
                             text = "Email",
-                            color = Color.White,
+                            color = Color.DarkGray,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )
@@ -166,7 +166,7 @@ fun ProfileScreen(
                                     checkmarkColor = Color.White
                                 )
                             )
-                            Text("Active", color = Color.White)
+                            Text("Active", color = Color.DarkGray)
                         }
                         Spacer(modifier = Modifier.height(verticalSpacing))
                         Button(
@@ -191,7 +191,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Current Password",
-                            color = Color.White,
+                            color = Color.DarkGray,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )
@@ -216,7 +216,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(verticalSpacing))
                         Text(
                             text = "New Password",
-                            color = Color.White,
+                            color = Color.DarkGray,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )

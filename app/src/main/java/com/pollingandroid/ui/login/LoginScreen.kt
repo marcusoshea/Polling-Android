@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.PopupProperties
 import com.pollingandroid.util.PollingOrderUtils
 import com.pollingandroid.util.UserUtils
+import android.content.pm.PackageManager
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +53,14 @@ fun LoginScreen(
         }
     }
 
+    val packageInfo = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+    }
+
     Column(modifier = modifier
         .fillMaxSize()
         .background(color = PrimaryColor)) {
@@ -69,11 +79,11 @@ fun LoginScreen(
             TextField(
                 value = email,
                 onValueChange = { loginViewModel.setEmail(it) },
-                label = { Text("Email", color = Color.White) },
+                label = { Text("Email", color = Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White,
+                    focusedLabelColor = Color.DarkGray,
+                    unfocusedLabelColor = Color.DarkGray,
                     cursorColor = Color.White
                 )
             )
@@ -81,12 +91,12 @@ fun LoginScreen(
             TextField(
                 value = password,
                 onValueChange = { loginViewModel.setPassword(it) },
-                label = { Text("Password", color = Color.White) },
+                label = { Text("Password", color = Color.DarkGray) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White,
+                    focusedLabelColor = Color.DarkGray,
+                    unfocusedLabelColor = Color.DarkGray,
                     cursorColor = Color.White
                 )
             )
@@ -173,6 +183,16 @@ fun LoginScreen(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+
+            // Version name display
+            Text(
+                text = "Version ${packageInfo?.versionName ?: ""}",
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
         }
     }
 }

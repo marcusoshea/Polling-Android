@@ -963,7 +963,7 @@ fun CandidateDetail(
         }
 
         // Candidate Link section - show only if link exists (moved to bottom)
-        if (!candidate.link.isNullOrBlank()) {
+        if (candidate.link != null && candidate.link != "null" && candidate.link.isNotBlank()) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

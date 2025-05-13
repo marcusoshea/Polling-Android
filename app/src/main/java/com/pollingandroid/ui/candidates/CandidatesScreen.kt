@@ -145,7 +145,8 @@ fun CandidatesScreen(
                             },
                             onToggleWatchlist = { candidate ->
                                 candidatesViewModel.toggleCandidateWatchlist(candidate)
-                            }
+                            },
+                            candidatesViewModel = candidatesViewModel
                         )
                     } else {
                         CandidateDetail(
@@ -193,8 +194,30 @@ fun CandidatesScreen(
 fun CandidateListScreen(
     candidates: List<Candidate>,
     onCandidateClick: (Candidate) -> Unit,
-    onToggleWatchlist: (Candidate) -> Unit
+    onToggleWatchlist: (Candidate) -> Unit,
+    candidatesViewModel: CandidatesViewModel = viewModel()
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    var showWatchlistOnly by remember { mutableStateOf(false) }
+
+    // Filter by both name and watchlist status
+    val filteredCandidates = candidates.filter { candidate ->
+        // First apply the name filter
+        val matchesName = searchQuery.isEmpty() ||
+                candidate.name.contains(searchQuery, ignoreCase = true) ||
+                candidate.firstName.contains(searchQuery, ignoreCase = true) ||
+                candidate.lastName.contains(searchQuery, ignoreCase = true) ||
+                candidate.society.contains(searchQuery, ignoreCase = true) ||
+                candidate.city.contains(searchQuery, ignoreCase = true) ||
+                candidate.province.contains(searchQuery, ignoreCase = true)
+
+        // Then apply watchlist filter if enabled
+        val matchesWatchlist = !showWatchlistOnly || candidate.watch_list
+
+        // Both filters must pass
+        matchesName && matchesWatchlist
+    }
+
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -209,6 +232,55 @@ fun CandidateListScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Search field
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                label = { Text("Search candidates") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = BeigeLightBackground,
+                    focusedContainerColor = BeigeLightBackground,
+                    unfocusedTextColor = Black,
+                    focusedTextColor = Black
+                )
+            )
+
+            // Watchlist filter
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = showWatchlistOnly,
+                    onCheckedChange = { showWatchlistOnly = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = LinkBlue,
+                        uncheckedColor = Black
+                    )
+                )
+                Text(
+                    text = "Show watchlist only",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Black,
+                    modifier = Modifier.clickable { showWatchlistOnly = !showWatchlistOnly }
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Display filter count
+                Text(
+                    text = "${filteredCandidates.size} of ${candidates.size}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Black.copy(alpha = 0.7f)
+                )
+            }
+
             // Header row
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -234,9 +306,15 @@ fun CandidateListScreen(
             )
 
             // Candidate rows
-            if (candidates.isEmpty()) {
+            if (filteredCandidates.isEmpty()) {
                 Text(
-                    text = "No candidates available",
+                    text = if (searchQuery.isNotBlank()) {
+                        "No candidates match your search"
+                    } else if (showWatchlistOnly) {
+                        "No candidates are on your watchlist"
+                    } else {
+                        "No candidates available"
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = Black,
                     textAlign = TextAlign.Center,
@@ -246,7 +324,7 @@ fun CandidateListScreen(
                 )
             } else {
                 LazyColumn {
-                    items(candidates) { candidate ->
+                    items(filteredCandidates) { candidate ->
                         CandidateListItem(
                             candidate = candidate,
                             onClick = { onCandidateClick(candidate) },

@@ -106,7 +106,7 @@ fun CandidatesScreen(
                     )
                 } else {
                     CenterAlignedTopAppBar(
-                        title = { Text("Candidate Details - ${selectedCandidate!!.name}") },
+                        title = { Text(selectedCandidate!!.name) },
                         navigationIcon = {
                             IconButton(onClick = { candidatesViewModel.clearSelectedCandidate() }) {
                                 Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -771,93 +771,104 @@ fun CandidateDetail(
                                         )
                                     ) {
                                         var webViewHeight by remember { mutableStateOf(250.dp) }
-                                        AndroidView(
-                                            factory = { context ->
-                                                WebView(context).apply {
-                                                    webViewClient = object : WebViewClient() {
-                                                        override fun onPageFinished(
-                                                            view: WebView?,
-                                                            url: String?
-                                                        ) {
-                                                            super.onPageFinished(view, url)
-                                                            view?.evaluateJavascript(
-                                                                "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
-                                                            ) { height ->
-                                                                try {
-                                                                    val contentHeight =
-                                                                        height.toFloat().toInt()
-                                                                    val calculatedHeight =
-                                                                        contentHeight / context.resources.displayMetrics.density
-                                                                    webViewHeight = maxOf(
-                                                                        250.dp,
-                                                                        (calculatedHeight + 100).dp
-                                                                    )
-                                                                } catch (e: Exception) {
-                                                                    webViewHeight = 250.dp
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    settings.apply {
-                                                        javaScriptEnabled = true
-                                                        useWideViewPort = true
-                                                        loadWithOverviewMode = true
-                                                    }
-                                                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                                    loadDataWithBaseURL(
-                                                        null,
-                                                        buildString {
-                                                            append("<html><head>")
-                                                            append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
-                                                            append("<style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style>")
-                                                            append("</head><body>")
-                                                            // If the description already contains complete HTML structure, use as is
-                                                            // Otherwise wrap the content
-                                                            if (image.description.trim()
-                                                                    .startsWith("<html") &&
-                                                                image.description.trim()
-                                                                    .endsWith("</html>")
-                                                            ) {
-                                                                // Extract the body content if it's a complete HTML document
-                                                                val bodyStart =
-                                                                    image.description.indexOf("<body")
-                                                                val bodyEnd =
-                                                                    image.description.indexOf("</body>")
-                                                                if (bodyStart >= 0 && bodyEnd >= 0) {
-                                                                    val bodyTagEnd =
-                                                                        image.description.indexOf(
-                                                                            ">",
-                                                                            bodyStart
-                                                                        )
-                                                                    append(
-                                                                        image.description.substring(
-                                                                            bodyTagEnd + 1,
-                                                                            bodyEnd
-                                                                        )
-                                                                    )
-                                                                } else {
-                                                                    append(image.description)
-                                                                }
-                                                            } else {
-                                                                append(image.description)
-                                                            }
-                                                            append("</body></html>")
-                                                        },
-                                                        "text/html",
-                                                        "UTF-8",
-                                                        null
-                                                    )
-                                                }
-                                            },
+                                        Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height(webViewHeight)
-                                                .background(TertiaryColor)
-                                                .padding(bottom = 8.dp),
-                                            update = { webView ->
-                                                // Update the WebView when needed
+                                                .heightIn(max = 250.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = TertiaryColor
+                                            ),
+                                            elevation = CardDefaults.cardElevation(2.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .padding(4.dp)
+                                            ) {
+                                                AndroidView(
+                                                    factory = { context ->
+                                                        WebView(context).apply {
+                                                            webViewClient =
+                                                                object : WebViewClient() {
+                                                                    override fun onPageFinished(
+                                                                        view: WebView?,
+                                                                        url: String?
+                                                                    ) {
+                                                                        super.onPageFinished(
+                                                                            view,
+                                                                            url
+                                                                        )
+                                                                        view?.evaluateJavascript(
+                                                                            "(function() { return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); })();",
+                                                                        ) { height ->
+                                                                            try {
+                                                                                val contentHeight =
+                                                                                    height.toFloat()
+                                                                                        .toInt()
+                                                                                val calculatedHeight =
+                                                                                    contentHeight / context.resources.displayMetrics.density
+                                                                                webViewHeight =
+                                                                                    maxOf(
+                                                                                        250.dp,
+                                                                                        (calculatedHeight + 50).dp
+                                                                                    )
+                                                                            } catch (e: Exception) {
+                                                                                webViewHeight =
+                                                                                    250.dp
+                                                                            }
+                                                                        }
+                                                                }
+                                                            }
+                                                            settings.apply {
+                                                                javaScriptEnabled = true
+                                                                useWideViewPort = true
+                                                                loadWithOverviewMode = true
+                                                                setSupportZoom(true)
+                                                                builtInZoomControls = true
+                                                                displayZoomControls = false
+                                                            }
+                                                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                                            loadDataWithBaseURL(
+                                                                null,
+                                                                buildString {
+                                                                    append("<html><head>")
+                                                                    append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes\">")
+                                                                    append("<style>body{background-color:#ECD9A1; margin:8px; padding:8px;}</style>")
+                                                                    append("</head><body>")
+                                                                    val bodyStart =
+                                                                        image.description.indexOf("<body")
+                                                                    val bodyEnd =
+                                                                        image.description.indexOf("</body>")
+                                                                    if (bodyStart >= 0 && bodyEnd >= 0) {
+                                                                        val bodyTagEnd =
+                                                                            image.description.indexOf(
+                                                                                ">",
+                                                                                bodyStart
+                                                                            )
+                                                                        append(
+                                                                            image.description.substring(
+                                                                                bodyTagEnd + 1,
+                                                                                bodyEnd
+                                                                            )
+                                                                        )
+                                                                    } else {
+                                                                        append(image.description)
+                                                                    }
+                                                                    append("</body></html>")
+                                                                },
+                                                                "text/html",
+                                                                "UTF-8",
+                                                                null
+                                                            )
+                                                        }
+                                                    },
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .verticalScroll(rememberScrollState())
+                                                )
                                             }
-                                        )
+                                        }
                                     } else {
                                         Text(
                                             text = image.description,
@@ -886,14 +897,16 @@ fun CandidateDetail(
                             // Handle error opening URI
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(0.25f),
+                    modifier = Modifier
+                        .fillMaxWidth(0.50f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LinkBlue
-                    )
+                    ),
+                    contentPadding = PaddingValues(vertical = 12.dp, horizontal = 16.dp)
                 ) {
                     Text(
-                        text = "Additional Candidate Information",
+                        text = "Candidate\nInformation",
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center

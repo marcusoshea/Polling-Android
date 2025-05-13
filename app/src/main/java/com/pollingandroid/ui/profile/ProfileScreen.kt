@@ -10,6 +10,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -29,6 +30,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.pollingandroid.ui.theme.LinkBlue
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.ui.login.SecureStorage
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +44,17 @@ fun ProfileScreen(
     val context = LocalContext.current
     val pollingOrderName = profileViewModel.pollingOrderName.observeAsState("").value
     val memberInfo = profileViewModel.memberInfo.observeAsState()
+    val scrollState = rememberScrollState()
+
+    // Detect if the device is a compact phone based on screen width
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+
+    // Adjust padding based on screen width
+    val horizontalPadding = if (screenWidthDp < 360) 8.dp else 20.dp
+    val columnWidth = if (screenWidthDp < 360) 0.98f else 0.95f
+    val verticalSpacing = if (screenWidthDp < 360) 6.dp else 16.dp
+    val buttonHeight = if (screenWidthDp < 360) 36.dp else 48.dp
 
     if (!isUserLoggedIn(context)) {
         LaunchedEffect(Unit) {
@@ -78,16 +93,17 @@ fun ProfileScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .background(color = PrimaryColor),
+                        .background(color = PrimaryColor)
+                        .verticalScroll(scrollState),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(color = PrimaryColor.copy(alpha = 0.5f))
-                            .padding(20.dp)
-                            .fillMaxWidth(.95f)
+                            .padding(horizontalPadding)
+                            .fillMaxWidth(columnWidth)
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -113,7 +129,7 @@ fun ProfileScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(verticalSpacing))
                         Text(
                             text = "Email",
                             color = Color.White,
@@ -137,7 +153,7 @@ fun ProfileScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(verticalSpacing))
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -152,24 +168,25 @@ fun ProfileScreen(
                             )
                             Text("Active", color = Color.White)
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(verticalSpacing))
                         Button(
                             onClick = {
                                 profileViewModel.updateProfile(context, name, email, active)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
+                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue),
+                            modifier = Modifier.height(buttonHeight)
                         ) {
                             Text("Update Profile", color = Color.White)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(color = PrimaryColor.copy(alpha = 0.5f))
-                            .padding(20.dp)
-                            .fillMaxWidth(.95f)
+                            .padding(horizontalPadding)
+                            .fillMaxWidth(columnWidth)
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -196,7 +213,7 @@ fun ProfileScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(verticalSpacing))
                         Text(
                             text = "New Password",
                             color = Color.White,
@@ -221,7 +238,7 @@ fun ProfileScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(verticalSpacing))
                         Button(
                             onClick = {
                                 // Prevent double submission
@@ -256,7 +273,8 @@ fun ProfileScreen(
                                 }
                             },
                             enabled = !isSubmitting && currentPassword.length >= 6 && newPassword.length >= 6,
-                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue)
+                            colors = ButtonDefaults.buttonColors(containerColor = LinkBlue),
+                            modifier = Modifier.height(buttonHeight)
                         ) {
                             if (isSubmitting) {
                                 Row(

@@ -1,13 +1,16 @@
 package com.pollingandroid.api
 
+import android.util.Log
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import com.google.gson.GsonBuilder
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://api-polling.aethelmearc.org"
+    private const val TAG = "RetrofitInstance"
+    // private const val BASE_URL = "https://api-polling.aethelmearc.org"
+    private const val BASE_URL = "https://api-polling-dev.aethelmearc.org"
 
     private val retrofit by lazy {
         Retrofit.Builder()
@@ -24,6 +27,8 @@ object RetrofitInstance {
     }
 
     private fun createOkHttpClient(): OkHttpClient {
+        Log.d(TAG, "Creating OkHttpClient")
+        
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

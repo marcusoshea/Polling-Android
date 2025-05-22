@@ -25,6 +25,8 @@ import com.pollingandroid.ui.theme.TertiaryColor
 import androidx.compose.foundation.background
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.graphics.Color
+import android.content.pm.PackageManager
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun HomeScreen(
@@ -72,6 +74,25 @@ fun HomeScreen(
                             )
                         )
                     }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    val packageInfo = remember {
+                        try {
+                            context.packageManager.getPackageInfo(context.packageName, 0)
+                        } catch (e: PackageManager.NameNotFoundException) {
+                            null
+                        }
+                    }
+
+                    Text(
+                        text = "Version ${packageInfo?.versionName ?: ""}",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
                 }
             }
         )

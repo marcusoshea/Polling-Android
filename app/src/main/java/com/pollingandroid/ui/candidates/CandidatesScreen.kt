@@ -106,7 +106,7 @@ fun CandidatesScreen(
                     )
                 } else {
                     CenterAlignedTopAppBar(
-                        title = { Text(selectedCandidate!!.name) },
+                        title = { Text("$pollingOrderName Candidates") },
                         navigationIcon = {
                             IconButton(onClick = { candidatesViewModel.clearSelectedCandidate() }) {
                                 Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -403,6 +403,18 @@ fun CandidateDetail(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text =  candidate.name,
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         // Polling Notes sections
         if (showPollingNotes && pollingGroups.isNotEmpty()) {
             Card(
@@ -557,7 +569,7 @@ fun CandidateDetail(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "External Notes (${externalNotes.size})",
+                            text = "Non Polling Notes (${externalNotes.size})",
                             style = MaterialTheme.typography.titleLarge,
                             color = Black
                         )

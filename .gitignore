@@ -25,3 +25,5 @@ keystore/
 build_release.sh
 validate_aab.sh
 verify_keystore.sh
+app/src/main/java/com/pollingandroid/util/Constants.kt
+app/src/main/java/com/pollingandroid/util/Constants.kt

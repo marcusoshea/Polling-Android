@@ -356,6 +356,7 @@ private fun ActivePollingContent(
     var showSuccessMessage by remember { mutableStateOf(false) }
     var isUpdate by remember { mutableStateOf(false) }
     var isDraft by remember { mutableStateOf(false) }
+    var showLoadingOverlay by remember { mutableStateOf(false) }
 
     // Handle success message display
     LaunchedEffect(showSuccessMessage) {
@@ -696,17 +697,38 @@ private fun ActivePollingContent(
                         Button(
                             onClick = {
                                 try {
+                                    showLoadingOverlay = true
                                     isSubmitting = true
                                     isUpdate = false
                                     isDraft = true
 
                                     // Use the regular onUpdateVotes function but with isCompleted=false
                                     onUpdateVotes(getVotesList(), false) {
-                                        isSubmitting = false
-                                        showSuccessMessage = true
+                                        try {
+                                            // Refresh polling data
+                                            val encryptedToken =
+                                                SecureStorage.retrieve("accessToken")
+                                            val authToken =
+                                                UserUtils.decryptData(encryptedToken ?: "") ?: ""
+                                            val pollingOrderId =
+                                                SecureStorage.retrieve("pollingOrder")
+                                                    ?.toIntOrNull() ?: 0
+
+                                            pollingViewModel.loadCurrentPollingData(
+                                                pollingOrderId,
+                                                authToken
+                                            )
+                                            isSubmitting = false
+                                            showSuccessMessage = true
+                                            showLoadingOverlay = false
+                                        } catch (e: Exception) {
+                                            isSubmitting = false
+                                            showLoadingOverlay = false
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     isSubmitting = false
+                                    showLoadingOverlay = false
                                     // Show user-friendly error message
                                     android.widget.Toast.makeText(
                                         context,
@@ -740,6 +762,7 @@ private fun ActivePollingContent(
 
                     Button(
                         onClick = {
+                            showLoadingOverlay = true
                             isSubmitting = true
                             isUpdate = true
                             isDraft = false
@@ -748,14 +771,29 @@ private fun ActivePollingContent(
                             try {
                                 onUpdateVotes(getVotesList(), true) {
                                     try {
+                                        // Refresh polling data
+                                        val encryptedToken = SecureStorage.retrieve("accessToken")
+                                        val authToken =
+                                            UserUtils.decryptData(encryptedToken ?: "") ?: ""
+                                        val pollingOrderId =
+                                            SecureStorage.retrieve("pollingOrder")?.toIntOrNull()
+                                                ?: 0
+
+                                        pollingViewModel.loadCurrentPollingData(
+                                            pollingOrderId,
+                                            authToken
+                                        )
                                         isSubmitting = false
                                         showSuccessMessage = true
+                                        showLoadingOverlay = false
                                     } catch (e: Exception) {
-                                        // Silent error handling for cleaner release
+                                        isSubmitting = false
+                                        showLoadingOverlay = false
                                     }
                                 }
                             } catch (e: Exception) {
                                 isSubmitting = false
+                                showLoadingOverlay = false
                                 // Show user-friendly error message
                                 android.widget.Toast.makeText(
                                     context,
@@ -781,6 +819,43 @@ private fun ActivePollingContent(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // Loading overlay
+    if (showLoadingOverlay) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.Black.copy(alpha = 0.7f))
+                .clickable(enabled = false) { /* Consume clicks to prevent interactions */ },
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(150.dp),
+                colors = CardDefaults.cardColors(containerColor = PrimaryColor),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(56.dp),
+                        color = Gold,
+                        strokeWidth = 6.dp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (isDraft) "Saving draft..." else "Submitting votes...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = BeigeLightBackground
+                    )
                 }
             }
         }
@@ -998,6 +1073,22 @@ private fun CandidateVoteRow(
                             },
                             text = { Text("Yes", color = BeigeLightBackground) }
                         )
+                        // Get current polling order ID
+                        val pollingOrderId =
+                            SecureStorage.retrieve("pollingOrder")?.toIntOrNull() ?: 0
+
+                        // Only show this option if polling order is not 1 or 8
+                        if (pollingOrderId != 1 && pollingOrderId != 8) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    onVoteChange(2)
+                                    // Mark this candidate as having an explicitly selected vote
+                                    selectedVotes[candidate.candidate_id] = true
+                                    expanded = false
+                                },
+                                text = { Text("Wait", color = BeigeLightBackground) }
+                            )
+                        }
                         DropdownMenuItem(
                             onClick = {
                                 onVoteChange(3)
@@ -1017,22 +1108,7 @@ private fun CandidateVoteRow(
                             text = { Text("Abstain", color = BeigeLightBackground) }
                         )
 
-                        // Get current polling order ID
-                        val pollingOrderId =
-                            SecureStorage.retrieve("pollingOrder")?.toIntOrNull() ?: 0
 
-                        // Only show this option if polling order is not 1 or 8
-                        if (pollingOrderId != 1 && pollingOrderId != 8) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    onVoteChange(2)
-                                    // Mark this candidate as having an explicitly selected vote
-                                    selectedVotes[candidate.candidate_id] = true
-                                    expanded = false
-                                },
-                                text = { Text("Wait", color = BeigeLightBackground) }
-                            )
-                        }
                     }
                 }
 
@@ -1624,12 +1700,10 @@ fun CandidateDetailOverlay(
 // Helper function to format date strings
 private fun formatDate(dateString: String): String {
     return try {
-        val parts = dateString.split("T")[0].split("-")
-        if (parts.size >= 3) {
-            "${parts[1]}/${parts[2]}/${parts[0]}"
-        } else {
-            dateString
-        }
+        // Split the dateString at 'T' and get the date part
+        val datePart = dateString.split("T")[0]
+        // The ISO format is already YYYY-MM-DD, so just return the date part
+        datePart
     } catch (e: Exception) {
         dateString
     }

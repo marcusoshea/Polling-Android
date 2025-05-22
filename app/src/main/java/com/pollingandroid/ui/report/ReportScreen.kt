@@ -77,24 +77,6 @@ fun ReportScreen(
         ) {
 
             Spacer(modifier = Modifier.height(16.dp))
-            if (inProcessPollingAvailable) {
-                Button(
-                    onClick = { viewModel.toggleReport() },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = if (closedPollingAvailable) "Show In-Process Polling" else "Show Closed Polling",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             if (isLoading) {
                 Box(

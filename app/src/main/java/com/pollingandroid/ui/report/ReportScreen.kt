@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
@@ -22,13 +21,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.SecondaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
@@ -48,6 +48,7 @@ fun ReportScreen(
     val pollingOrderName by viewModel.pollingOrderName.collectAsState()
     val closedPollingAvailable by viewModel.closedPollingAvailable.collectAsState()
     val inProcessPollingAvailable by viewModel.inProcessPollingAvailable.collectAsState()
+    val showingInProcessReport by viewModel.showingInProcessReport.collectAsState()
     val candidateList by viewModel.candidateList.collectAsState()
     val pollingSummary by viewModel.pollingSummary.collectAsState()
     val pollingTotals by viewModel.pollingTotals.collectAsState()
@@ -106,8 +107,49 @@ fun ReportScreen(
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // Toggle between closed and in-process reports
+                        if (inProcessPollingAvailable) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Closed Report",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (closedPollingAvailable) Black else Color.Gray,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+
+                                Switch(
+                                    checked = showingInProcessReport,
+                                    onCheckedChange = { viewModel.toggleReport() },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = TertiaryColor,
+                                        checkedTrackColor = SecondaryColor,
+                                        uncheckedThumbColor = TertiaryColor,
+                                        uncheckedTrackColor = PrimaryColor
+                                    )
+                                )
+
+                                Text(
+                                    text = "In-Process",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (inProcessPollingAvailable) Black else Color.Gray,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+
+                            Divider(
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                color = Black
+                            )
+                        }
+
                         // Report summary section
-                        if (closedPollingAvailable && pollingSummary != null) {
+                        if (!showingInProcessReport && pollingSummary != null) {
                             // Closed polling content
                             Text(
                                 text = buildAnnotatedString {
@@ -181,8 +223,29 @@ fun ReportScreen(
                                     color = Black
                                 )
                             }
-                        } else if (inProcessPollingAvailable && pollingSummary != null) {
+                        } else if (showingInProcessReport && pollingSummary != null) {
                             // In-process polling content
+                            Text(
+                                text = buildAnnotatedString {
+                                    append("This in-process report for the ")
+                                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                        append(pollingOrderName)
+                                    }
+                                    append(" polling for ")
+                                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                        append(pollingSummary?.pollingName ?: "")
+                                    }
+                                    append(" will run from ")
+                                    append(pollingSummary?.startDate ?: "")
+                                    append(" to ")
+                                    append(pollingSummary?.endDate ?: "")
+                                    append(".")
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                color = Black
+                            )
+
                             Text(
                                 text = buildAnnotatedString {
                                     append("In-Process Polling Candidate List (")
@@ -313,7 +376,8 @@ fun ReportScreen(
                                     Column(
                                         modifier = Modifier
                                             .border(width = 2.dp, color = PrimaryColor,
-                                                shape = RoundedCornerShape(8.dp))
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
 
                                     ) {
                                         // Candidate name and recommendation

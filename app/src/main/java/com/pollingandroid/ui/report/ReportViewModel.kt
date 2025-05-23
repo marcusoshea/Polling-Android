@@ -80,7 +80,9 @@ class ReportViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private var reportShown = false
+    // Track which report is currently being shown
+    private val _showingInProcessReport = MutableStateFlow(false)
+    val showingInProcessReport: StateFlow<Boolean> = _showingInProcessReport
 
     init {
         // Initialize the polling order name from storage
@@ -90,10 +92,38 @@ class ReportViewModel : ViewModel() {
     }
 
     fun toggleReport() {
-        reportShown = !reportShown
-        _closedPollingAvailable.value = !_closedPollingAvailable.value
-        _inProcessPollingAvailable.value = !_inProcessPollingAvailable.value
-        loadCandidates()
+        // Toggle between closed and in-process report views
+        val wasInProcess = _showingInProcessReport.value
+
+        viewModelScope.launch {
+            try {
+                // Get the auth token and order ID
+                val authToken =
+                    SecureStorage.retrieve("accessToken")?.let { UserUtils.decryptData(it) }
+                val orderIdString = SecureStorage.retrieve("pollingOrder")
+                val orderId = orderIdString?.toIntOrNull() ?: 0
+
+                if (authToken != null && orderId > 0) {
+                    if (wasInProcess) {
+                        // Switch to closed polling
+                        val reportData = repository.getPollingReport(orderId, authToken)
+                        if (reportData.candidates.isNotEmpty()) {
+                            _showingInProcessReport.value = false
+                            handleReportData(reportData)
+                        }
+                    } else {
+                        // Switch to in-process polling
+                        val reportData = repository.getInProcessPollingReport(orderId, authToken)
+                        if (reportData.candidates.isNotEmpty()) {
+                            _showingInProcessReport.value = true
+                            handleReportData(reportData)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to toggle report: ${e.message}"
+            }
+        }
     }
 
     fun toggleNotesVisibility() {
@@ -114,39 +144,28 @@ class ReportViewModel : ViewModel() {
                 val orderId = orderIdString?.toIntOrNull() ?: 0
 
                 if (authToken != null && orderId > 0) {
+                    // First check if an in-process polling is available
+                    val inProcessData = repository.getInProcessPollingReport(orderId, authToken)
+                    val hasInProcessData = inProcessData.candidates.isNotEmpty()
+                    _inProcessPollingAvailable.value = hasInProcessData
+
+                    // Then check if a closed polling is available
+                    val closedReportData = repository.getPollingReport(orderId, authToken)
+                    val hasClosedData = closedReportData.candidates.isNotEmpty()
+                    _closedPollingAvailable.value = hasClosedData
+
+                    // Determine which report to show initially
                     if (_closedPollingAvailable.value) {
-                        // Get closed polling report
-                        val reportData = repository.getPollingReport(orderId, authToken)
-                        if (reportData.candidates.isNotEmpty()) {
-                            _closedPollingAvailable.value = true
-                            _inProcessPollingAvailable.value = false
-                            handleReportData(reportData)
-                        } else {
-                            // If no closed polling data, try in-process
-                            _closedPollingAvailable.value = false
-                            val inProcessData =
-                                repository.getInProcessPollingReport(orderId, authToken)
-                            if (inProcessData.candidates.isNotEmpty()) {
-                                _inProcessPollingAvailable.value = true
-                                handleReportData(inProcessData)
-                            } else {
-                                _inProcessPollingAvailable.value = false
-                                _candidateList.value = emptyList()
-                                _errorMessage.value = "No polling data available"
-                            }
-                        }
+                        // Default to showing closed polling first if available
+                        handleReportData(closedReportData)
+                        _showingInProcessReport.value = false
+                    } else if (_inProcessPollingAvailable.value) {
+                        // Otherwise show in-process polling if available
+                        handleReportData(inProcessData)
+                        _showingInProcessReport.value = true
                     } else {
-                        // Get in-process polling report
-                        val reportData = repository.getInProcessPollingReport(orderId, authToken)
-                        if (reportData.candidates.isNotEmpty()) {
-                            _inProcessPollingAvailable.value = true
-                            _closedPollingAvailable.value = false
-                            handleReportData(reportData)
-                        } else {
-                            _inProcessPollingAvailable.value = false
-                            _candidateList.value = emptyList()
-                            _errorMessage.value = "No in-process polling data available"
-                        }
+                        _candidateList.value = emptyList()
+                        _errorMessage.value = "No polling data available"
                     }
                 } else {
                     _errorMessage.value = "Authentication error. Please login again."

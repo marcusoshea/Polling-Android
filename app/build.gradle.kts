@@ -22,8 +22,8 @@ android {
         applicationId = "com.pollingandroid"
         minSdk = 28
         targetSdk = 35
-        versionCode = 23051531
-        versionName = "1.0.19"
+        versionCode = 23051533
+        versionName = "1.0.21"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

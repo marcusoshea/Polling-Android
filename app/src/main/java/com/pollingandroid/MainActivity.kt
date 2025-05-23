@@ -11,20 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.pollingandroid.ui.home.HomeScreen
-import com.pollingandroid.ui.login.LoginHandler
-import com.pollingandroid.ui.login.LoginScreen
-import com.pollingandroid.ui.profile.ProfileScreen
-import com.pollingandroid.ui.registration.RegistrationScreen
-import com.pollingandroid.ui.registration.RegistrationHandler
-import com.pollingandroid.ui.theme.PollingAndroidTheme
-import com.pollingandroid.ui.theme.PrimaryColor
-import com.pollingandroid.ui.theme.TertiaryColor
-import com.pollingandroid.ui.theme.SecondaryColor
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -42,8 +28,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.pollingandroid.ui.home.HomeScreen
+import com.pollingandroid.ui.login.LoginHandler
+import com.pollingandroid.ui.login.LoginScreen
+import com.pollingandroid.ui.profile.ProfileScreen
+import com.pollingandroid.ui.registration.RegistrationScreen
+import com.pollingandroid.ui.registration.RegistrationHandler
+import com.pollingandroid.ui.theme.PollingAndroidTheme
+import com.pollingandroid.ui.theme.PrimaryColor
+import com.pollingandroid.ui.theme.TertiaryColor
+import com.pollingandroid.ui.theme.SecondaryColor
+import kotlinx.coroutines.launch
 import com.pollingandroid.ui.candidates.CandidatesScreen
 import com.pollingandroid.ui.polling.PollingScreen
 import com.pollingandroid.ui.report.ReportScreen
@@ -51,6 +51,8 @@ import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordHandler
 import com.pollingandroid.ui.requestresetpassword.RequestResetPasswordScreen
 import com.pollingandroid.ui.resetpassword.ResetPasswordScreen
 import com.pollingandroid.ui.theme.Black
+import com.pollingandroid.ui.feedback.FeedbackScreen
+import com.pollingandroid.ui.feedback.FeedbackHandler
 import com.pollingandroid.util.Constants
 
 class MainActivity : ComponentActivity() {
@@ -78,6 +80,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val loginHandler = LoginHandler(this@MainActivity)
                 val registrationHandler = RegistrationHandler(this@MainActivity)
+                val feedbackHandler = FeedbackHandler(this@MainActivity)
 
                 val currentRoute =
                     navController.currentBackStackEntryAsState().value?.destination?.route
@@ -239,14 +242,7 @@ class MainActivity : ComponentActivity() {
 
                                             Button(
                                                 onClick = {
-                                                    val emailIntent = Intent(Intent.ACTION_SENDTO)
-                                                    emailIntent.data =
-                                                        Uri.parse("mailto:${Constants.FEEDBACK_EMAIL}")
-                                                    emailIntent.putExtra(
-                                                        Intent.EXTRA_SUBJECT,
-                                                        "Polling App Feedback"
-                                                    )
-                                                    this@MainActivity.startActivity(emailIntent)
+                                                    navController.navigate("feedback")
                                                     scope.launch { drawerState.close() }
                                                 },
                                                 modifier = Modifier
@@ -334,6 +330,13 @@ class MainActivity : ComponentActivity() {
                                 ReportScreen(
                                     navController = navController,
                                     onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } }
+                                )
+                            }
+                            composable("feedback") {
+                                FeedbackScreen(
+                                    navController = navController,
+                                    onMenuClick = { if (showDrawer) scope.launch { drawerState.open() } },
+                                    feedbackHandler = feedbackHandler
                                 )
                             }
                             composable("register") {

@@ -6,6 +6,7 @@ import com.pollingandroid.model.PollingNoteRequest
 import com.pollingandroid.model.RegistrationRequest
 import com.pollingandroid.model.ResetPassword
 import com.pollingandroid.model.ResetPasswordRequest
+import com.pollingandroid.model.FeedbackRequest
 
 import retrofit2.Call
 import retrofit2.http.GET
@@ -168,4 +169,6 @@ interface PollingApi {
         @HeaderMap headers: Map<String, String>
     ): Call<ResponseBody>
 
+    @POST("feedback")
+    fun submitFeedback(@Body feedbackRequest: FeedbackRequest): Call<ResponseBody>
 }

@@ -590,7 +590,7 @@ fun CandidateDetail(
 
                     if (externalNotes.isEmpty()) {
                         Text(
-                            text = "No external notes available",
+                            text = "No non polling notes available",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Black,
                             modifier = Modifier.padding(vertical = 8.dp)

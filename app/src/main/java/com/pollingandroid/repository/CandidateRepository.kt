@@ -6,6 +6,7 @@ import com.pollingandroid.ui.candidates.models.CandidateImage
 import com.pollingandroid.ui.candidates.models.ExternalNote
 import com.pollingandroid.ui.candidates.models.PollingNote
 import com.pollingandroid.ui.candidates.models.PollingGroup
+import com.pollingandroid.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -185,7 +186,7 @@ class CandidateRepository {
                 // Use OkHttp directly to make the request with the exact JSON format
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://api-polling.aethelmearc.org/externalnote/delete")
+                    .url("${Constants.BASE_API_URL}/externalnote/delete")
                     .post(requestBody)
                     .header("Authorization", "Bearer $authToken")
                     .build()

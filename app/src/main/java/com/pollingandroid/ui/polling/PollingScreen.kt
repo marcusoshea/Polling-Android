@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -401,6 +403,7 @@ private fun ActivePollingContent(
 
         if (orderMembers.isNotEmpty() && isOrderAdmin) {
             var expanded by remember { mutableStateOf(false) }
+            var searchText by remember { mutableStateOf("") }
 
             Text(
                 text = "Order Clerk Proxy Vote As:",
@@ -414,76 +417,133 @@ private fun ActivePollingContent(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                Card(
+                OutlinedTextField(
+                    value = if (expanded) searchText else (selectedMember?.name ?: "Vote as self"),
+                    onValueChange = {
+                        searchText = it
+                        if (!expanded) expanded = true
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { expanded = true },
-                    colors = CardDefaults.cardColors(containerColor = TertiaryColor)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                        .clickable {
+                            expanded = true
+                            searchText = ""
+                        },
+                    label = {
                         Text(
-                            text = if (selectedMember == null) "Vote as self" else selectedMember.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Black
+                            "Search or select member",
+                            fontWeight = FontWeight.Bold,
+                            color = TertiaryColor
                         )
+                    },
+                    trailingIcon = {
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Select Member",
-                            tint = Black
+                            tint = Black,
+                            modifier = Modifier.clickable {
+                                expanded = !expanded
+                                if (expanded) searchText = ""
+                            }
                         )
-                    }
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .background(PrimaryColor),
-                    properties = PopupProperties(focusable = true)
-                ) {
-                    // Add "Vote as self" option first
-                    DropdownMenuItem(
-                        onClick = {
-                            onMemberSelected(-1) // -1 indicates voting as self
-                            expanded = false
-                        },
-                        text = {
-                            Text(
-                                text = "Vote as self",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = BeigeLightBackground
-                            )
-                        }
+                    },
+                    readOnly = !expanded,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Black,
+                        unfocusedTextColor = Black,
+                        focusedContainerColor = TertiaryColor,
+                        unfocusedContainerColor = TertiaryColor,
+                        cursorColor = Black,
+                        focusedBorderColor = Color.DarkGray,
+                        unfocusedBorderColor = Color.Gray
                     )
+                )
 
-                    // Add divider
-                    Divider(color = BeigeLightBackground.copy(alpha = 0.5f))
+                if (expanded) {
+                    // Filter members based on search text
+                    val filteredMembers = if (searchText.isBlank()) {
+                        orderMembers.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                    } else {
+                        orderMembers
+                            .filter { it.name.contains(searchText, ignoreCase = true) }
+                            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                    }
 
-                    // Add members
-                    orderMembers.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
-                        .forEach { member ->
-                        DropdownMenuItem(
-                            onClick = {
-                                onMemberSelected(member.id)
-                                expanded = false
-                            },
-                            text = {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 60.dp)
+                            .heightIn(max = 200.dp),
+                        colors = CardDefaults.cardColors(containerColor = PrimaryColor),
+                        elevation = CardDefaults.cardElevation(8.dp)
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        ) {
+                            // Add "Vote as self" option first (always show if search is empty or matches)
+                            if (searchText.isBlank() || "vote as self".contains(
+                                    searchText,
+                                    ignoreCase = true
+                                )
+                            ) {
+                                item {
+                                    Text(
+                                        text = "Vote as self",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = BeigeLightBackground,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                onMemberSelected(-1)
+                                                expanded = false
+                                                searchText = ""
+                                            }
+                                            .padding(vertical = 12.dp, horizontal = 16.dp)
+                                    )
+                                    Divider(color = BeigeLightBackground.copy(alpha = 0.5f))
+                                }
+                            }
+
+                            // Add filtered members
+                            items(filteredMembers) { member ->
                                 Text(
                                     text = member.name,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = BeigeLightBackground
+                                    color = BeigeLightBackground,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onMemberSelected(member.id)
+                                            expanded = false
+                                            searchText = ""
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 16.dp)
                                 )
                             }
-                        )
+
+                            // Show "No matches" if no results
+                            if (searchText.isNotBlank() && filteredMembers.isEmpty() &&
+                                !"vote as self".contains(searchText, ignoreCase = true)
+                            ) {
+                                item {
+                                    Text(
+                                        text = "No matching members found",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = BeigeLightBackground.copy(alpha = 0.7f),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp, horizontal = 16.dp),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+
+
             }
         }
 

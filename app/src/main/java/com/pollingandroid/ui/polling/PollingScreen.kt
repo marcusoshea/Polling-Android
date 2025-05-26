@@ -467,7 +467,8 @@ private fun ActivePollingContent(
                     Divider(color = BeigeLightBackground.copy(alpha = 0.5f))
 
                     // Add members
-                    orderMembers.forEach { member ->
+                    orderMembers.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                        .forEach { member ->
                         DropdownMenuItem(
                             onClick = {
                                 onMemberSelected(member.id)

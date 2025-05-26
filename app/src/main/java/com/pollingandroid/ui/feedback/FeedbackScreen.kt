@@ -15,6 +15,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -67,10 +68,10 @@ fun FeedbackScreen(
             .background(PrimaryColor)
     ) {
         TopAppBar(
-            title = "Feedback",
+            title = "App Feedback",
             onMenuClick = onMenuClick
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,16 +80,16 @@ fun FeedbackScreen(
         ) {
             Text(
                 text = buildAnnotatedString {
-                    append("Thank you for providing feedback about the polling application.\n")
-                    withStyle(style = SpanStyle(fontStyle = FontStyle.Italic, fontSize = 16.sp)) {
+                    withStyle(style = SpanStyle(fontStyle = FontStyle.Italic, fontSize = 18.sp)) {
                         append("Note: this form is NOT for candidate feedback.")
                     }
                 },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-
+            Spacer(modifier = Modifier.height(4.dp))
             // Display user info (non-editable)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -97,55 +98,59 @@ fun FeedbackScreen(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .padding(16.dp)
                         .background(TertiaryColor)
                 ) {
                     Text(
                         text = "Feedback from:",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = userName,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Black
                     )
                     Text(
                         text = userEmail,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.Black
                     )
                 }
-            }
 
-            OutlinedTextField(
-                value = message,
-                onValueChange = {
-                    message = it
-                    errorMessage = null // Clear error when user types
-                },
-                label = { Text("Your Message") },
-                placeholder = { Text("Tell us what you think...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .background(Color.White)
-                ,
-                minLines = 6,
-                enabled = !isLoading && !isSubmitted,
-                isError = errorMessage != null && message.text.isBlank()
-            )
-
-            // Show error message if validation fails
-            errorMessage?.let { error ->
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp)
+                TextField(
+                    value = message,
+                    onValueChange = {
+                        message = it
+                        errorMessage = null // Clear error when user types
+                    },
+                    label = { Text("Your Message") },
+                    placeholder = { Text("Tell us what you think...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(1.dp)
+                        .height(150.dp)
+                        .background(Color.White),
+                    minLines = 6,
+                    enabled = !isLoading && !isSubmitted,
+                    isError = errorMessage != null && message.text.isBlank()
                 )
-            }
 
+                // Show error message if validation fails
+                errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+            }
             Button(
                 onClick = {
                     // Validate message field

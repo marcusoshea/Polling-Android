@@ -70,7 +70,7 @@ fun RequestResetPasswordScreen(
             TextField(
                 value = email,
                 onValueChange = { requestResetPasswordViewModel.setEmail(it) },
-                label = { Text("Email", color = Color.White) },
+                label = { Text("Email", color = Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
                     focusedLabelColor = Color.White,

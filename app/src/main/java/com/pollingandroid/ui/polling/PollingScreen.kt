@@ -571,8 +571,53 @@ private fun ActivePollingContent(
                     color = Black
                 )
 
-                // Remove the old header row and divider since headers are now in each card
                 Divider(color = Color.Gray)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Determine the state of the "Select All Private" checkbox
+                    val allPrivateStates = votes.values.map { it.isPrivate }
+                    val allPrivate = allPrivateStates.all { it }
+                    val nonePrivate = allPrivateStates.none { it }
+
+                    var selectAllPrivate by remember { mutableStateOf(allPrivate) }
+
+                    // Update selectAllPrivate when vote states change
+                    LaunchedEffect(allPrivateStates) {
+                        selectAllPrivate = allPrivate
+                    }
+                    Text(
+                        text = "Mark All Responses as Private",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Black
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Checkbox(
+                        checked = selectAllPrivate,
+                        onCheckedChange = { isChecked ->
+                            selectAllPrivate = isChecked
+                            // Update all candidate votes' private state
+                            votes.values.forEach { vote ->
+                                vote.isPrivate = isChecked
+                            }
+                            // Trigger recomposition
+                            voteUpdateCounter++
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = Color.Gray,
+                            checkmarkColor = Color.White
+                        )
+                    )
+
+
+
+
+                }
 
                 // Candidate rows
                 val lazyListState = rememberLazyListState()

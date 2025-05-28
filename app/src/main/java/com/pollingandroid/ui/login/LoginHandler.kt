@@ -7,6 +7,7 @@ import com.pollingandroid.api.RetrofitInstance
 import com.pollingandroid.model.LoginRequest
 import com.pollingandroid.model.PollingOrderMember
 import com.pollingandroid.repository.PollingOrderRepository
+import com.pollingandroid.repository.PollingOrderMemberRepository
 import com.pollingandroid.util.UserUtils
 import com.pollingandroid.util.LiveDataCleaner
 import retrofit2.Call
@@ -34,6 +35,9 @@ class LoginHandler(private val context: Context) {
                         SecureStorage.store("active", pollingOrderMember.active.toString())
                         SecureStorage.store("accessToken", encryptedAccessToken)
                         SecureStorage.store("isOrderAdmin", pollingOrderMember.isOrderAdmin.toString())
+
+                        // Update the PollingOrderMemberRepository with the new member data
+                        PollingOrderMemberRepository.setPollingOrderMember(pollingOrderMember)
 
                         // Update the PollingOrderRepository with the stored polling order name
                         val storedPollingOrderName = UserUtils.getStoredPollingOrderName()

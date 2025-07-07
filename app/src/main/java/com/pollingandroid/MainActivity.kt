@@ -8,6 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -94,7 +97,10 @@ class MainActivity : ComponentActivity() {
                 val isDrawerOpen =
                     remember { derivedStateOf { drawerState.currentValue == DrawerValue.Open } }.value
 
-                Surface(color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars)
+                ) {
                     ModalNavigationDrawer(
                         drawerState = drawerState,
                         scrimColor = Color.Transparent,
@@ -103,7 +109,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .fillMaxWidth(if (isDrawerOpen) 0.40f else 0f)
-
                                     .alpha(if (isDrawerOpen) 1f else 0f)
                             ) {
                                 if (showDrawer && isDrawerOpen) {

@@ -10,8 +10,11 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
     private const val TAG = "RetrofitInstance"
-    // private const val BASE_URL = "https://api-polling.aethelmearc.org"
     private val BASE_URL = Constants.BASE_API_URL
+
+    init {
+        Log.d(TAG, "Using BASE_URL: $BASE_URL")
+    }
 
     private val retrofit by lazy {
         Retrofit.Builder()

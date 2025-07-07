@@ -248,40 +248,45 @@ class PollingReportRepository {
                 noteMap["note"] = noteJson.optString("note", "")
                 noteMap["private"] = noteJson.optBoolean("private", false)
                 noteMap["member_name"] = noteJson.optString("member_name", "")
+                noteMap["completed"] = noteJson.optBoolean("completed", false)
 
                 // Add timestamp information for sorting
                 noteMap["pn_created_at"] = noteJson.optString("pn_created_at", "")
 
-                val memberName = noteMap["member_name"] as String
-                val candidateId = noteMap["candidate_id"] as Int
-                val memberCandidatePair = Pair(memberName, candidateId)
+                // Only process notes that are marked as completed AND have actual note content
+                val noteText = noteMap["note"] as String
+                if ((noteMap["completed"] as Boolean) && noteText.isNotEmpty() && noteText != "null") {
+                    val memberName = noteMap["member_name"] as String
+                    val candidateId = noteMap["candidate_id"] as Int
+                    val memberCandidatePair = Pair(memberName, candidateId)
 
-                // Get the existing note for this member-candidate pair, if any
-                val existingNote = latestNotesByMemberCandidate[memberCandidatePair]
+                    // Get the existing note for this member-candidate pair, if any
+                    val existingNote = latestNotesByMemberCandidate[memberCandidatePair]
 
-                if (existingNote == null) {
-                    // No existing note, add this one
-                    latestNotesByMemberCandidate[memberCandidatePair] = noteMap
-                } else {
-                    // Compare timestamps to keep only the latest
-                    val existingTimestamp = existingNote["pn_created_at"] as String
-                    val newTimestamp = noteMap["pn_created_at"] as String
-
-                    // If new timestamp is greater (more recent), replace the existing note
-                    if (newTimestamp > existingTimestamp) {
+                    if (existingNote == null) {
+                        // No existing note, add this one
                         latestNotesByMemberCandidate[memberCandidatePair] = noteMap
-                    }
-                }
+                    } else {
+                        // Compare timestamps to keep only the latest
+                        val existingTimestamp = existingNote["pn_created_at"] as String
+                        val newTimestamp = noteMap["pn_created_at"] as String
 
-                val voteValue = noteMap["vote"] as? Int
-                val voteString = when (voteValue) {
-                    1 -> "Yes"
-                    2 -> "Wait"
-                    3 -> "No"
-                    4 -> "Abstain"
-                    else -> ""
+                        // If new timestamp is greater (more recent), replace the existing note
+                        if (newTimestamp > existingTimestamp) {
+                            latestNotesByMemberCandidate[memberCandidatePair] = noteMap
+                        }
+                    }
+
+                    val voteValue = noteMap["vote"] as? Int
+                    val voteString = when (voteValue) {
+                        1 -> "Yes"
+                        2 -> "Wait"
+                        3 -> "No"
+                        4 -> "Abstain"
+                        else -> ""
+                    }
+                    noteMap["vote"] = voteString
                 }
-                noteMap["vote"] = voteString
             }
 
             // Add only the latest notes to the final list

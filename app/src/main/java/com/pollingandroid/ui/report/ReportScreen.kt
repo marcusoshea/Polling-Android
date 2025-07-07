@@ -27,6 +27,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.pollingandroid.ui.theme.PrimaryColor
@@ -520,28 +521,11 @@ fun ReportScreen(
                                                                             ),
                                                                             color = Black
                                                                         )
-
-                                                                        // Always show vote if present
-                                                                        if (note.vote.isNotEmpty()) {
-                                                                            Spacer(
-                                                                                modifier = Modifier.width(
-                                                                                    8.dp
-                                                                                )
-                                                                            )
-                                                                            Text(
-                                                                                text = "(${note.vote})",
-                                                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                                                    fontStyle = FontStyle.Italic,
-                                                                                    fontWeight = FontWeight.Bold
-                                                                                ),
-                                                                                color = Black
-                                                                            )
-                                                                        }
                                                                     }
                                                                 }
                                                             }
                                                         } else {
-                                                            // For null/blank notes, just show member name and vote
+                                                            // For null/blank notes, just show member name
                                                             Row(
                                                                 modifier = Modifier.padding(vertical = 4.dp)
                                                             ) {
@@ -551,33 +535,13 @@ fun ReportScreen(
                                                                     color = Black
                                                                 )
 
-                                                                // Simple row with just the member name and vote
-                                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                                    Text(
-                                                                        text = note.memberName,
-                                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                                            fontStyle = FontStyle.Italic
-                                                                        ),
-                                                                        color = Black
-                                                                    )
-
-                                                                    // Always show vote if present
-                                                                    if (note.vote.isNotEmpty()) {
-                                                                        Spacer(
-                                                                            modifier = Modifier.width(
-                                                                                8.dp
-                                                                            )
-                                                                        )
-                                                                        Text(
-                                                                            text = "(${note.vote})",
-                                                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                                                fontStyle = FontStyle.Italic,
-                                                                                fontWeight = FontWeight.Bold
-                                                                            ),
-                                                                            color = Black
-                                                                        )
-                                                                    }
-                                                                }
+                                                                Text(
+                                                                    text = note.memberName,
+                                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                                        fontStyle = FontStyle.Italic
+                                                                    ),
+                                                                    color = Black
+                                                                )
                                                             }
                                                         }
                                                     }

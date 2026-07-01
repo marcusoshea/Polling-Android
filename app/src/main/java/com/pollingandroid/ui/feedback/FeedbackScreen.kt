@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.pollingandroid.ui.components.TopAppBar
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 import com.pollingandroid.ui.theme.PrimaryColor
 import com.pollingandroid.ui.theme.TertiaryColor
 import com.pollingandroid.util.UserUtils

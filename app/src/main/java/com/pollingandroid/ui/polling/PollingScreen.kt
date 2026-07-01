@@ -71,7 +71,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 import com.pollingandroid.ui.theme.Black
 import com.pollingandroid.ui.theme.LinkBlue
 import com.pollingandroid.ui.theme.Red

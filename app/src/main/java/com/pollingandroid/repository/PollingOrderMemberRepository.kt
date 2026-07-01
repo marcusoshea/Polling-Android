@@ -3,7 +3,7 @@ package com.pollingandroid.repository
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.pollingandroid.model.PollingOrderMember
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 import com.pollingandroid.util.UserUtils
 
 object PollingOrderMemberRepository {

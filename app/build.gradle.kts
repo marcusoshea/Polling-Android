@@ -22,8 +22,8 @@ android {
         applicationId = "com.pollingandroid"
         minSdk = 28
         targetSdk = 35
-        versionCode = 23051535
-        versionName = "1.0.23"
+        versionCode = 23051538
+        versionName = "1.0.26"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,11 +54,17 @@ android {
             )
             // Always use release signing config (which points to debug keystore for testing)
             signingConfig = signingConfigs.getByName("release")
+            buildConfigField("String", "BASE_API_URL", "\"https://api-polling.aethelmearc.org\"")
         }
         debug {
             isMinifyEnabled = false
             isDebuggable = true
             signingConfig = signingConfigs.getByName("debug")
+            buildConfigField(
+                "String",
+                "BASE_API_URL",
+                "\"https://api-polling.aethelmearc.org\""
+            )
         }
     }
 
@@ -83,6 +89,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -114,6 +121,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.window:window:1.1.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.1.2")

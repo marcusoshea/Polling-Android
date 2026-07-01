@@ -8,7 +8,7 @@ import com.pollingandroid.model.PollingOrderMember
 import com.pollingandroid.repository.PollingOrderMemberRepository
 import com.pollingandroid.util.UserUtils
 import com.pollingandroid.repository.PollingOrderRepository
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 
 class ProfileViewModel : ViewModel() {
 

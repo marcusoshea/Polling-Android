@@ -62,19 +62,3 @@ class RequestResetPasswordHandler(private val context: Context) {
     }
 
 }
-
-object SecureStorage {
-    private val storage = mutableMapOf<String, String>()
-
-    fun store(key: String, value: String) {
-        storage[key] = value
-    }
-
-    fun retrieve(key: String): String? {
-        return storage[key]
-    }
-
-    fun clear() {
-        storage.clear()
-    }
-}

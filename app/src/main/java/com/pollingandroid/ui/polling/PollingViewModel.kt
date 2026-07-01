@@ -10,7 +10,7 @@ import com.pollingandroid.model.PollingSummary
 import com.pollingandroid.model.PollingNoteRequest
 import com.pollingandroid.repository.PollingOrderRepository
 import com.pollingandroid.ui.candidates.models.Candidate
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 import com.pollingandroid.ui.polling.models.PollingState
 import com.pollingandroid.ui.polling.models.PollingMember
 import com.pollingandroid.ui.polling.models.CandidateVote

@@ -59,7 +59,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

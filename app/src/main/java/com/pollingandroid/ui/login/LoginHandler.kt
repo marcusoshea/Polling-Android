@@ -10,6 +10,7 @@ import com.pollingandroid.repository.PollingOrderRepository
 import com.pollingandroid.repository.PollingOrderMemberRepository
 import com.pollingandroid.util.UserUtils
 import com.pollingandroid.util.LiveDataCleaner
+import com.pollingandroid.util.SecureStorage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -72,21 +73,5 @@ class LoginHandler(private val context: Context) {
         SecureStorage.clear()
 
         Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
-    }
-}
-
-object SecureStorage {
-    private val storage = mutableMapOf<String, String>()
-
-    fun store(key: String, value: String) {
-        storage[key] = value
-    }
-
-    fun retrieve(key: String): String? {
-        return storage[key]
-    }
-
-    fun clear() {
-        storage.clear()
     }
 }

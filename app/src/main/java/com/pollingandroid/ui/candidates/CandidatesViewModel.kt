@@ -11,7 +11,7 @@ import com.pollingandroid.ui.candidates.models.CandidateImage
 import com.pollingandroid.ui.candidates.models.ExternalNote
 import com.pollingandroid.ui.candidates.models.PollingGroup
 import com.pollingandroid.ui.candidates.models.PollingNote
-import com.pollingandroid.ui.login.SecureStorage
+import com.pollingandroid.util.SecureStorage
 import com.pollingandroid.util.UserUtils
 import kotlinx.coroutines.launch
 

@@ -140,7 +140,7 @@ class CandidateRepository {
                 val currentDate = java.time.LocalDate.now().toString()
 
                 // Get the member ID from SecureStorage
-                val memberId = com.pollingandroid.ui.login.SecureStorage.retrieve("memberId") ?: "0"
+                val memberId = com.pollingandroid.util.SecureStorage.retrieve("memberId") ?: "0"
 
                 // Use the format required by the API
                 val body = mapOf(
@@ -165,7 +165,7 @@ class CandidateRepository {
                 val headers = mapOf("Authorization" to "Bearer $authToken")
 
                 // Get the member ID from SecureStorage
-                val memberId = com.pollingandroid.ui.login.SecureStorage.retrieve("memberId") ?: "0"
+                val memberId = com.pollingandroid.util.SecureStorage.retrieve("memberId") ?: "0"
 
                 // Convert string values to integers for the API
                 val memberIdInt = memberId.toIntOrNull() ?: 0
